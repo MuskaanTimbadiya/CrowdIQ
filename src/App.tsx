@@ -19,6 +19,22 @@ export default function App() {
   const [selectedStadiumId, setSelectedStadiumId] = useState<string>("metlife");
   const [activeTab, setActiveTab] = useState<string>("perimeter");
 
+  // Theme state & persistence
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    const saved = localStorage.getItem("theme");
+    return (saved as "light" | "dark") || "light";
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
   // Interaction / Selection states
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [selectedAssetName, setSelectedAssetName] = useState<string>("");
@@ -340,7 +356,7 @@ export default function App() {
 
   const renderAICore = () => {
     return (
-      <div className="glass-panel rounded-xl p-5 border-t-4 border-primary bg-white shadow-xl shadow-primary/5">
+      <div className="glass-panel rounded-xl p-5 border-t-4 border-primary bg-surface shadow-xl shadow-primary/5">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
             <span className="material-symbols-outlined text-primary">psychology</span>
@@ -415,7 +431,7 @@ export default function App() {
       )}
 
       {/* TOP NAVIGATION HEADER */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center w-full px-8 h-20 bg-white/90 backdrop-blur-xl border-b border-outline-variant/30 shadow-sm" id="main-header">
+      <header className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center w-full px-8 h-20 bg-surface/90 backdrop-blur-xl border-b border-outline-variant/30 shadow-sm" id="main-header">
         <div className="flex items-center gap-6">
           <span className="font-display font-bold text-2xl text-primary tracking-tighter">CrowdIQ</span>
           <div className="h-8 w-[1px] bg-outline-variant hidden md:block"></div>
@@ -429,7 +445,7 @@ export default function App() {
         </div>
 
         {/* Floating match telemetry pill */}
-        <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-6 glass-panel px-6 py-2 rounded-full border border-primary/10 bg-white">
+        <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-6 glass-panel px-6 py-2 rounded-full border border-primary/10 bg-surface">
           <div className="flex flex-col items-center">
             <span className="font-mono text-[9px] text-outline uppercase tracking-widest leading-none">Quarter-Final</span>
             <span className="font-display font-bold text-xs text-on-surface mt-0.5">ARG <span className="text-primary mx-0.5">vs</span> ENG</span>
@@ -449,22 +465,33 @@ export default function App() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex flex-wrap items-center gap-2 bg-slate-100 border border-slate-200 p-1 rounded-lg">
-            <span className="text-[9px] text-slate-500 font-mono uppercase tracking-wider font-semibold px-1">Arena:</span>
+        <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
+            <span className="text-[9px] text-outline font-mono uppercase tracking-wider font-semibold px-1">Arena:</span>
             <select
               value={selectedStadiumId}
               onChange={(e) => {
                 setSelectedStadiumId(e.target.value);
                 handlePhaseChange(currentPhase, e.target.value);
               }}
-              className="bg-white border border-slate-200 text-xs text-on-surface rounded px-1.5 py-0.5 font-sans focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all cursor-pointer"
+              className="bg-surface border border-outline-variant/30 text-xs text-on-surface rounded px-1.5 py-0.5 font-sans focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all cursor-pointer"
             >
-              <option value="metlife">MetLife (NY/NJ)</option>
-              <option value="azteca">Estadio Azteca (MX)</option>
-              <option value="sofi">SoFi Stadium (LA)</option>
+              <option value="metlife" className="bg-surface text-on-surface">MetLife (NY/NJ)</option>
+              <option value="azteca" className="bg-surface text-on-surface">Estadio Azteca (MX)</option>
+              <option value="sofi" className="bg-surface text-on-surface">SoFi Stadium (LA)</option>
             </select>
           </div>
+          
+          <button
+            onClick={() => setTheme(p => p === "light" ? "dark" : "light")}
+            className="w-9 h-9 rounded-xl border border-outline-variant/30 flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-all cursor-pointer"
+            title={theme === "light" ? "Switch to Dark Theme" : "Switch to Light Theme"}
+          >
+            <span className="material-symbols-outlined text-lg">
+              {theme === "light" ? "dark_mode" : "light_mode"}
+            </span>
+          </button>
+
           <div className="w-9 h-9 rounded-full border border-secondary/20 overflow-hidden shadow-inner hidden md:block">
             <img className="w-full h-full object-cover" alt="Director Avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPkq0M20VwenWX3hOvHaSdjSAh__Y7H8ZdC4qhDw9rGyzBvZo2wZmW1rZWvjdcmgO56Kk4AbamaWocDNun37m-Cym_vZf3y0P6womwIKdQ1QCLvWv8yVkpePJo9qo8Y7R-klEWnV2hDEw2orNgu8RvRcadB8xEsWmit3RYKjG3_8yheqrFP-mCZ6KI6aPNsTTGCg0HPQIjJl3wShxiGTM-_MsjtWH41M7ijlqHZCMVjrnBLykgmWc"/>
           </div>
@@ -472,7 +499,7 @@ export default function App() {
       </header>
 
       {/* Side NavBar */}
-      <aside className="fixed left-0 top-0 h-full flex flex-col z-40 bg-white border-r border-outline-variant w-20 hover:w-64 transition-all duration-300 group shadow-lg shadow-black/5">
+      <aside className="fixed left-0 top-0 h-full flex flex-col z-40 bg-surface border-r border-outline-variant w-20 hover:w-64 transition-all duration-300 group shadow-lg shadow-black/5">
         <div className="mt-24 px-4 mb-8">
           <div className="flex items-center gap-4 group-hover:px-2 transition-all">
             <div className="w-10 h-10 flex items-center justify-center bg-primary/5 rounded-lg shrink-0">
@@ -582,7 +609,7 @@ export default function App() {
                       <div
                         key={road.id}
                         onClick={() => selectAssetOnMap(road.id, road.name, 'road', `${road.name} direction delay is ${road.delayMinutes} mins. Contraflow configuration: ${road.laneControlsActive ? 'ACTIVE' : 'OFF'}`)}
-                        className={`glass-panel rounded-xl p-4 bg-white cursor-pointer transition-all border ${
+                        className={`glass-panel rounded-xl p-4 bg-surface cursor-pointer transition-all border ${
                           isSelected ? "border-primary shadow-md" : "border-outline-variant/40 hover:bg-slate-50"
                         }`}
                       >
@@ -619,7 +646,7 @@ export default function App() {
             {/* Center column - Portals & Gate Queues */}
             <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
               {/* Portals & Gate Queues */}
-              <div id="gates-card" className="glass-panel rounded-xl flex flex-col bg-white overflow-hidden shadow-sm">
+              <div id="gates-card" className="glass-panel rounded-xl flex flex-col bg-surface overflow-hidden shadow-sm">
                 <div className="p-4 border-b border-outline-variant/30 flex justify-between items-center bg-surface-container-low/50">
                   <span className="font-mono text-xs uppercase text-on-surface font-bold">Portals &amp; Gate Queues</span>
                   <span className="px-2 py-0.5 bg-surface-container-highest rounded text-[10px] font-mono text-on-surface-variant font-semibold">~10M WAIT</span>
@@ -640,7 +667,7 @@ export default function App() {
                         key={gate.id}
                         onClick={() => selectAssetOnMap(gate.id, gate.name, 'gate', `Throughput is currently ${gate.throughputRate} fans/minute with ${gate.assignedVolunteers} active lane monitors.`)}
                         className={`p-3 bg-surface-container-low border rounded-lg border-l-4 cursor-pointer transition-all ${borderLeftColor} ${
-                          isSelected ? "border-primary shadow-md bg-white" : "border-outline-variant/50 hover:bg-surface-container-low/80"
+                          isSelected ? "border-primary shadow-md bg-surface" : "border-outline-variant/50 hover:bg-surface-container-low/80"
                         }`}
                       >
                         <div className="flex justify-between items-start mb-2">
@@ -689,7 +716,7 @@ export default function App() {
             {/* Arena Fill Rate and Parking/Transit */}
             <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
               {state && (
-                <div className="glass-panel rounded-xl p-5 relative overflow-hidden bg-white shadow-sm">
+                <div className="glass-panel rounded-xl p-5 relative overflow-hidden bg-surface shadow-sm">
                   <div className="absolute top-2 right-2">
                     <div className="w-2.5 h-2.5 rounded-full bg-status-go status-glow-go"></div>
                   </div>
@@ -724,7 +751,7 @@ export default function App() {
             </div>
 
             <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
-              <div id="transit-card" className="glass-panel rounded-xl flex flex-col bg-white overflow-hidden shadow-sm">
+              <div id="transit-card" className="glass-panel rounded-xl flex flex-col bg-surface overflow-hidden shadow-sm">
                 <div className="p-4 border-b border-outline-variant/30 bg-surface-container-low/50">
                   <span className="font-mono text-xs uppercase text-on-surface font-bold">Parking &amp; Transit Load</span>
                 </div>
@@ -743,7 +770,7 @@ export default function App() {
                         key={hub.id}
                         onClick={() => selectAssetOnMap(hub.id, hub.name, 'transit', `Transit vehicle frequency has been set to high flow with dynamic metering rules applied.`)}
                         className={`flex items-center gap-3 p-2 cursor-pointer rounded-lg border transition-all ${
-                          isSelected ? "border-primary bg-white shadow-sm" : "border-transparent hover:bg-surface-container"
+                          isSelected ? "border-primary bg-surface shadow-sm" : "border-transparent hover:bg-surface-container"
                         }`}
                       >
                         <span className="material-symbols-outlined text-outline">
@@ -780,7 +807,7 @@ export default function App() {
           <div className="grid grid-cols-12 gap-6 animate-fade-in">
             {/* Left side - Incidents Response */}
             <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
-              <div id="incidents-card" className="glass-panel rounded-xl flex flex-col bg-white overflow-hidden border border-outline-variant/30 shadow-sm">
+              <div id="incidents-card" className="glass-panel rounded-xl flex flex-col bg-surface overflow-hidden border border-outline-variant/30 shadow-sm">
                 <div className="p-4 bg-surface-container-high/60 flex justify-between items-center">
                   <span className="font-mono text-xs text-on-surface uppercase font-bold">Incident Response</span>
                   <span className="bg-status-critical px-2 py-0.5 rounded text-[9px] font-bold text-white">
@@ -849,7 +876,7 @@ export default function App() {
                           placeholder="Location: e.g. Gate A ticket booths"
                           value={incidentForm.location}
                           onChange={(e) => setIncidentForm(prev => ({ ...prev, location: e.target.value }))}
-                          className="w-full bg-white border border-outline-variant/60 rounded px-2 py-1 text-on-surface focus:outline-none focus:border-primary"
+                          className="w-full bg-surface border border-outline-variant/60 rounded px-2 py-1 text-on-surface focus:outline-none focus:border-primary"
                           required
                         />
                       </div>
@@ -857,7 +884,7 @@ export default function App() {
                         <select
                           value={incidentForm.severity}
                           onChange={(e) => setIncidentForm(prev => ({ ...prev, severity: e.target.value as any }))}
-                          className="flex-1 bg-white border border-outline-variant/60 rounded px-1 py-1 text-on-surface focus:outline-none"
+                          className="flex-1 bg-surface border border-outline-variant/60 rounded px-1 py-1 text-on-surface focus:outline-none"
                         >
                           <option value="INFO">INFO</option>
                           <option value="WARNING">WARNING</option>
@@ -876,7 +903,7 @@ export default function App() {
                           placeholder="Impact description..."
                           value={incidentForm.description}
                           onChange={(e) => setIncidentForm(prev => ({ ...prev, description: e.target.value }))}
-                          className="w-full bg-white border border-outline-variant/60 rounded px-2 py-1 text-on-surface focus:outline-none focus:border-primary"
+                          className="w-full bg-surface border border-outline-variant/60 rounded px-2 py-1 text-on-surface focus:outline-none focus:border-primary"
                           required
                         />
                       </div>
@@ -897,7 +924,7 @@ export default function App() {
           <div className="grid grid-cols-12 gap-6 animate-fade-in">
             {/* Left side - Dynamic Overhead Broadcasts */}
             <div className="col-span-12 lg:col-span-6 flex flex-col gap-6">
-              <div id="broadcasts-card" className="glass-panel rounded-xl p-4 bg-white border border-outline-variant/30 shadow-sm">
+              <div id="broadcasts-card" className="glass-panel rounded-xl p-4 bg-surface border border-outline-variant/30 shadow-sm">
                 <h4 className="font-mono text-xs text-on-surface uppercase mb-3 flex items-center gap-2 font-bold">
                   <span className="material-symbols-outlined text-primary text-base">broadcast_on_home</span>
                   Overhead Broadcasts
@@ -961,7 +988,7 @@ export default function App() {
 
             {/* Right side - Active Digital Boards stream */}
             <div className="col-span-12 lg:col-span-6 flex flex-col gap-6">
-              <div className="glass-panel rounded-xl p-4 bg-white border border-outline-variant/30 shadow-sm">
+              <div className="glass-panel rounded-xl p-4 bg-surface border border-outline-variant/30 shadow-sm">
                 <h4 className="font-mono text-xs text-on-surface uppercase mb-3 flex items-center gap-2 font-bold">
                   <span className="material-symbols-outlined text-primary text-base">rss_feed</span>
                   Active Digital Announcements Board
@@ -998,7 +1025,7 @@ export default function App() {
       </main>
 
       {/* FLOATING CHAT ASSISTANT WIDGET */}
-      <div className="fixed bottom-12 right-8 w-80 glass-panel rounded-2xl shadow-2xl border-primary/10 flex flex-col overflow-hidden z-50 bg-white/95 transition-all">
+      <div className="fixed bottom-12 right-8 w-80 glass-panel rounded-2xl shadow-2xl border-primary/10 flex flex-col overflow-hidden z-50 bg-surface/95 transition-all">
         <div className="p-3 bg-primary flex justify-between items-center text-white">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
@@ -1040,7 +1067,7 @@ export default function App() {
                       ? "bg-primary/5 border-primary/20 text-on-surface self-end ml-auto"
                       : msg.sender === "system"
                         ? "bg-slate-100 border-outline-variant/20 text-outline text-[9px] self-center w-full text-center"
-                        : "bg-white border-outline-variant/30 text-on-surface self-start mr-auto"
+                        : "bg-surface border-outline-variant/30 text-on-surface self-start mr-auto"
                   }`}
                 >
                   <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
@@ -1076,19 +1103,19 @@ export default function App() {
             <div className="p-2 border-t border-outline-variant/20 bg-slate-50 flex flex-wrap gap-1">
               <button
                 onClick={() => handleSendChatMessage("How do I bypass the massive Gate C crowd delay?")}
-                className="bg-white hover:bg-slate-50 border border-outline-variant/50 rounded-lg py-0.5 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px]"
+                className="bg-surface hover:bg-slate-50/10 border border-outline-variant/50 rounded-lg py-0.5 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px]"
               >
                 Bypass Gate C Wait
               </button>
               <button
                 onClick={() => handleSendChatMessage("I am at South Overflow Parking. How do I get inside?")}
-                className="bg-white hover:bg-slate-50 border border-outline-variant/50 rounded-lg py-0.5 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px]"
+                className="bg-surface hover:bg-slate-50/10 border border-outline-variant/50 rounded-lg py-0.5 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px]"
               >
                 Route from Lot H
               </button>
             </div>
 
-            <div className="p-3 border-t border-outline-variant/20 bg-white">
+            <div className="p-3 border-t border-outline-variant/20 bg-surface">
               <div className="relative flex items-center">
                 <input
                   type="text"
@@ -1111,7 +1138,7 @@ export default function App() {
       </div>
 
       {/* Footer: Persistent Telemetry Logs */}
-      <footer className="fixed bottom-0 left-0 right-0 h-10 z-50 bg-white/90 backdrop-blur-md border-t border-outline-variant/30 flex items-center justify-between px-8 shadow-inner" id="main-footer">
+      <footer className="fixed bottom-0 left-0 right-0 h-10 z-50 bg-surface/90 backdrop-blur-md border-t border-outline-variant/30 flex items-center justify-between px-8 shadow-inner" id="main-footer">
         <div className="flex items-center gap-4">
           <span className="font-mono text-[10px] text-on-surface uppercase tracking-widest flex items-center gap-1.5 font-bold shrink-0">
             <span className="w-2 h-2 rounded-full bg-status-go animate-pulse"></span>
@@ -1126,7 +1153,7 @@ export default function App() {
           </div>
         </div>
         <div className="flex items-center gap-6 text-[10px] text-outline shrink-0 font-mono">
-          <span>© 2026 CrowdIQ • Tactical White Command</span>
+          <span>© 2026 CrowdIQ • Operations Command</span>
         </div>
       </footer>
 
