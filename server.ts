@@ -468,6 +468,9 @@ app.post("/api/state/phase", (req, res) => {
 // 3. Resolve an Incident
 app.post("/api/incidents/resolve", (req, res) => {
   const { id } = req.body;
+  if (typeof id !== "string") {
+    return res.status(400).json({ error: "Invalid incident ID format" });
+  }
   state.incidents = state.incidents.map(inc => {
     if (inc.id === id) {
       return { ...inc, resolved: true };
@@ -497,11 +500,30 @@ app.post("/api/incidents/resolve", (req, res) => {
 // 4. Create manual incident
 app.post("/api/incidents", (req, res) => {
   const { location, severity, description } = req.body;
+  
+  if (location && typeof location !== "string") {
+    return res.status(400).json({ error: "Invalid location format" });
+  }
+  if (description && typeof description !== "string") {
+    return res.status(400).json({ error: "Invalid description format" });
+  }
+  if (severity && typeof severity !== "string") {
+    return res.status(400).json({ error: "Invalid severity format" });
+  }
+
+  const cleanLocation = (location || "Stadium Perimeter").replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
+  const cleanDescription = (description || "No details provided.").replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
+  
+  let cleanSeverity: "INFO" | "WARNING" | "CRITICAL" = "INFO";
+  if (severity && ["INFO", "WARNING", "CRITICAL"].includes(severity)) {
+    cleanSeverity = severity as any;
+  }
+
   const newIncident: CrowdIncident = {
     id: `inc_${Date.now()}`,
-    location: location || "Stadium Perimeter",
-    severity: severity || "INFO",
-    description: description || "No details provided.",
+    location: cleanLocation,
+    severity: cleanSeverity,
+    description: cleanDescription,
     timestamp: new Date().toISOString(),
     resolved: false
   };
@@ -512,6 +534,9 @@ app.post("/api/incidents", (req, res) => {
 // 5. Apply an optimization action
 app.post("/api/optimizations/apply", (req, res) => {
   const { id } = req.body;
+  if (typeof id !== "string") {
+    return res.status(400).json({ error: "Invalid optimization ID format" });
+  }
   state.optimizations = state.optimizations.map(opt => {
     if (opt.id === id) {
       return { ...opt, applied: true, appliedAt: new Date().toLocaleTimeString() };
@@ -676,6 +701,19 @@ app.post("/api/ai/optimize", async (req, res) => {
 app.post("/api/ai/guidance", async (req, res) => {
   const { message, chatHistory, userLanguage = "English" } = req.body;
 
+  if (typeof message !== "string" || !message.trim()) {
+    return res.status(400).json({ error: "Invalid or empty message parameter" });
+  }
+  if (userLanguage && typeof userLanguage !== "string") {
+    return res.status(400).json({ error: "Invalid userLanguage parameter" });
+  }
+
+  const cleanMessage = message.replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
+  let cleanLanguage = "English";
+  if (userLanguage && /^[a-zA-Z\s\-]{2,30}$/.test(userLanguage.trim())) {
+    cleanLanguage = userLanguage.trim();
+  }
+
   if (!ai) {
     // Fallback response when no API key
     const replyText = `[No API Key - Offline Mode] Hello there! I'm your FIFA 2026 World Cup helper. Currently at ${state.stadium.name}. Gate C is very crowded with a 36-minute wait time. I recommend entering through Gate B or D which have under 4 minutes wait time. Let me know if you need parking or transit recommendations!`;
@@ -718,8 +756,8 @@ app.post("/api/ai/guidance", async (req, res) => {
       ${state.incidents.filter(i => !i.resolved).map(i => `- [${i.severity}] ${i.location}: ${i.description}`).join("\n") || "None"}
       
       === FAN REQUEST ===
-      User's preferred language or system default: ${userLanguage}
-      Message: "${message}"
+      User's preferred language or system default: ${cleanLanguage}
+      Message: "${cleanMessage}"
       
       === CHAT HISTORY ===
       ${formattedHistory}
@@ -792,14 +830,32 @@ app.post("/api/ai/guidance", async (req, res) => {
 app.post("/api/ai/broadcast-draft", async (req, res) => {
   const { incidentLocation, incidentDescription, urgency = "HIGH" } = req.body;
 
+  if (incidentLocation && typeof incidentLocation !== "string") {
+    return res.status(400).json({ error: "Invalid incidentLocation format" });
+  }
+  if (incidentDescription && typeof incidentDescription !== "string") {
+    return res.status(400).json({ error: "Invalid incidentDescription format" });
+  }
+  if (urgency && typeof urgency !== "string") {
+    return res.status(400).json({ error: "Invalid urgency format" });
+  }
+
+  const cleanLocation = (incidentLocation || "Stadium Perimeter").replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
+  const cleanDescription = (incidentDescription || "No details provided.").replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
+  
+  let cleanUrgency = "HIGH";
+  if (urgency && ["NORMAL", "HIGH", "CRITICAL"].includes(urgency)) {
+    cleanUrgency = urgency;
+  }
+
   if (!ai) {
     // Offline / Mock broadcast draft
     const fallbackDraft = {
       id: `ann_draft_${Date.now()}`,
-      title: `Advisory: ${incidentLocation || 'Stadium update'}`,
-      content: `SAFETY NOTICE: Regarding ${incidentLocation}. ${incidentDescription || 'Please remain calm and follow volunteer directions.'} Plan your path accordingly. Thank you for your cooperation.`,
+      title: `Advisory: ${cleanLocation}`,
+      content: `SAFETY NOTICE: Regarding ${cleanLocation}. ${cleanDescription} Plan your path accordingly. Thank you for your cooperation.`,
       targetAudience: "ALL_FANS",
-      priority: urgency === "CRITICAL" ? "URGENT" : "HIGH",
+      priority: cleanUrgency === "CRITICAL" ? "URGENT" : "HIGH",
       languages: ["English", "Spanish"],
       broadcastActive: false,
       timestamp: new Date().toISOString()
@@ -811,9 +867,9 @@ app.post("/api/ai/broadcast-draft", async (req, res) => {
     const prompt = `
       You are the emergency PA and digital screen announcer for the FIFA World Cup 2026 stadium management team.
       Draft a formal, extremely clear, concise, and calm public safety broadcast or overhead notice based on this incident:
-      - Location: ${incidentLocation}
-      - Situation: ${incidentDescription}
-      - Severity: ${urgency}
+      - Location: ${cleanLocation}
+      - Situation: ${cleanDescription}
+      - Severity: ${cleanUrgency}
       
       Generate translations of the announcement content in English, Spanish (Español), and French/Portuguese, matching the global audience.
       Output exactly a JSON object matching this schema:
