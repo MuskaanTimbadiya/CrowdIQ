@@ -133,6 +133,46 @@ async function runTests() {
         console.log("✅ Test 8 Passed: POST /api/ai/broadcast-draft successfully drafted announcement.");
       });
 
+      // Test 9: POST /api/state/weather
+      await assertResponse(`http://localhost:${PORT}/api/state/weather`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ weather: "RAINY" })
+      }, (data, status) => {
+        if (status !== 200) throw new Error(`POST /api/state/weather returned ${status}`);
+        if (data.weather !== "RAINY") {
+          throw new Error("POST /api/state/weather failed to update weather state");
+        }
+        console.log("✅ Test 9 Passed: POST /api/state/weather successfully set weather state.");
+      });
+
+      // Test 10: POST /api/state/evacuation
+      await assertResponse(`http://localhost:${PORT}/api/state/evacuation`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: true })
+      }, (data, status) => {
+        if (status !== 200) throw new Error(`POST /api/state/evacuation returned ${status}`);
+        if (data.evacuationModeActive !== true) {
+          throw new Error("POST /api/state/evacuation failed to engage evacuation mode");
+        }
+        console.log("✅ Test 10 Passed: POST /api/state/evacuation successfully enabled evacuation mode.");
+      });
+
+      // Test 11: POST /api/staff/redeploy
+      await assertResponse(`http://localhost:${PORT}/api/staff/redeploy`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gateId: "gate_a", change: 2 })
+      }, (data, status) => {
+        if (status !== 200) throw new Error(`POST /api/staff/redeploy returned ${status}`);
+        const gate = data.gates.find((g: any) => g.id === "gate_a");
+        if (!gate || gate.assignedVolunteers < 2) {
+          throw new Error("POST /api/staff/redeploy failed to redeploy volunteers");
+        }
+        console.log("✅ Test 11 Passed: POST /api/staff/redeploy successfully updated staff counts.");
+      });
+
       console.log("\n🎉 ALL CrowdIQ API INTEGRATION TESTS PASSED SUCCESSFULLY!");
       server.close();
       process.exit(0);

@@ -65,6 +65,8 @@ export interface OptimizationAction {
   aiJustification: string;
 }
 
+export type WeatherCondition = 'SUNNY' | 'RAINY' | 'LIGHTNING_STORM';
+
 export interface SimulationState {
   stadium: StadiumInfo;
   gates: GateStatus[];
@@ -73,6 +75,9 @@ export interface SimulationState {
   incidents: CrowdIncident[];
   optimizations: OptimizationAction[];
   lastUpdated: string;
+  weather: WeatherCondition;
+  evacuationModeActive: boolean;
+  totalVolunteersPool: number;
 }
 
 export interface ChatMessage {

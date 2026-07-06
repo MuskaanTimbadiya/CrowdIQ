@@ -35,6 +35,30 @@ export default function App() {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
+  // Time Travel Offset Slider state (in minutes)
+  const [timeOffset, setTimeOffset] = useState<number>(0);
+
+  // Time Travel occupancy and delay helper calculations
+  const getForecastedAttendance = (offset: number) => {
+    if (offset < 0) {
+      const progress = (offset + 90) / 90; // 0 to 1
+      return 0.1 + 0.83 * Math.sin((progress * Math.PI) / 2);
+    } else {
+      const progress = offset / 60; // 0 to 1
+      return 0.93 - 0.15 * progress;
+    }
+  };
+
+  const getForecastedDelay = (offset: number) => {
+    if (offset < 0) {
+      const diff = Math.abs(offset + 30);
+      return Math.max(2, Math.round(35 - diff * 0.4));
+    } else {
+      const diff = Math.abs(offset - 40);
+      return Math.max(3, Math.round(45 - diff * 0.6));
+    }
+  };
+
   // Interaction / Selection states
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [selectedAssetName, setSelectedAssetName] = useState<string>("");
@@ -200,6 +224,74 @@ export default function App() {
       }
     } catch (e) {
       console.error("Failed to apply optimization:", e);
+    }
+  };
+
+  const handleUpdateWeather = async (weather: "SUNNY" | "RAINY" | "LIGHTNING_STORM") => {
+    try {
+      addLog(`WEATHER WARNING: Setting system atmospheric parameters to ${weather}...`);
+      const res = await fetch("/api/state/weather", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ weather })
+      });
+      if (res.ok) {
+        const updatedState = await res.json();
+        setState(updatedState);
+        addLog(`System weather updated to ${weather}. Congestion speeds and wait times recalculated.`);
+      }
+    } catch (e) {
+      console.error("Failed to update weather:", e);
+    }
+  };
+
+  const handleToggleEvacuation = async (active: boolean) => {
+    try {
+      addLog(active ? "⚠️ CRITICAL STATUS: INITIATING EMERGENCY EVACUATION PROTOCOLS!" : "System returning to normal stadium operations...");
+      const res = await fetch("/api/state/evacuation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active })
+      });
+      if (res.ok) {
+        const updatedState = await res.json();
+        setState(updatedState);
+        addLog(active ? "EVACUATION OVERRIDE: All portals configured outbound. Traffic contraflow engaged." : "Evacuation state cleared successfully.");
+      }
+    } catch (e) {
+      console.error("Failed to toggle evacuation:", e);
+    }
+  };
+
+  const handleRedeployStaff = async (gateId: string, change: number) => {
+    try {
+      const res = await fetch("/api/staff/redeploy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gateId, change })
+      });
+      if (res.ok) {
+        const updatedState = await res.json();
+        setState(updatedState);
+        const gateName = state?.gates.find(g => g.id === gateId)?.name || gateId;
+        addLog(`REDISTRIBUTION: Shifted ${change > 0 ? "+" : ""}${change} volunteers at ${gateName}.`);
+      } else {
+        const errData = await res.json();
+        addLog(`STAFF DENIED: ${errData.error || "Cannot complete redeployment shift."}`);
+      }
+    } catch (e) {
+      console.error("Failed to redeploy staff:", e);
+    }
+  };
+
+  const handleSpeak = (text: string) => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      window.speechSynthesis.speak(utterance);
+      addLog(`TEXT-TO-SPEECH: Speaking announcement preview.`);
+    } else {
+      addLog(`SPEECH ERROR: Text-to-Speech is not supported in this browser.`);
     }
   };
 
@@ -413,6 +505,24 @@ export default function App() {
   return (
     <div className="min-h-screen bg-surface-dim text-on-surface flex flex-col font-sans selection:bg-primary selection:text-on-primary pt-20" id="main-application-container">
       
+      {/* CRITICAL EVACUATION DRILL ACTIVE BANNER */}
+      {state?.evacuationModeActive && (
+        <div className="bg-red-600 text-white py-2 px-4 flex items-center justify-between z-40 shadow-lg border-b border-red-700 animate-pulse font-mono">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[20px] animate-spin">warning</span>
+            <span className="text-xs uppercase font-extrabold tracking-widest">
+              EMERGENCY DRILL COMPROMISE ACTIVE: FULL VENUE EVACUATION PROTOCOLS IN PROGRESS
+            </span>
+          </div>
+          <button
+            onClick={() => handleToggleEvacuation(false)}
+            className="bg-white text-red-600 hover:bg-red-50 text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded cursor-pointer transition-colors shadow"
+          >
+            Deactivate Drill
+          </button>
+        </div>
+      )}
+
       {/* GLOBAL ACTIVE EMERGENCY SCROLLING TICKER */}
       {activeAnnouncements.some(a => a.broadcastActive) && (
         <div className="bg-red-50 border-b border-red-200 py-1.5 px-4 overflow-hidden relative flex items-center z-30 shadow-sm">
@@ -479,6 +589,19 @@ export default function App() {
               <option value="metlife" className="bg-surface text-on-surface">MetLife (NY/NJ)</option>
               <option value="azteca" className="bg-surface text-on-surface">Estadio Azteca (MX)</option>
               <option value="sofi" className="bg-surface text-on-surface">SoFi Stadium (LA)</option>
+            </select>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
+            <span className="text-[9px] text-outline font-mono uppercase tracking-wider font-semibold px-1">Weather:</span>
+            <select
+              value={state?.weather || "SUNNY"}
+              onChange={(e) => handleUpdateWeather(e.target.value as any)}
+              className="bg-surface border border-outline-variant/30 text-xs text-on-surface rounded px-1.5 py-0.5 font-sans focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all cursor-pointer"
+            >
+              <option value="SUNNY">☀️ Sunny</option>
+              <option value="RAINY">🌧️ Rainy</option>
+              <option value="LIGHTNING_STORM">⛈️ Storm</option>
             </select>
           </div>
           
@@ -578,6 +701,51 @@ export default function App() {
       {/* MAIN LAYOUT CONTAINER */}
       <main className="flex-1 ml-20 p-6 md:p-8 pb-16 max-w-[1800px] w-full mx-auto" id="dashboard-grid-container">
         
+        {/* TIME TRAVEL PROJECTION SLIDER */}
+        <div className="glass-panel rounded-xl p-4 mb-6 bg-surface border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+          <div className="flex-grow">
+            <div className="flex justify-between items-center mb-1">
+              <span className="font-mono text-xs uppercase tracking-wider text-primary font-bold flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[16px] animate-pulse">timeline</span>
+                Occupancy Forecasting Slider
+              </span>
+              <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary">
+                {timeOffset === 0 ? "LIVE CURRENT" : timeOffset < 0 ? `${timeOffset} mins (Historical)` : `+${timeOffset} mins (Forecasted)`}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="-90"
+              max="60"
+              value={timeOffset}
+              onChange={(e) => setTimeOffset(Number(e.target.value))}
+              className="w-full h-1 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none"
+            />
+            <div className="flex justify-between text-[8px] text-outline font-mono mt-1 uppercase tracking-wider">
+              <span>-90m (Gates Open)</span>
+              <span>-60m</span>
+              <span>-30m (Peak Ingress)</span>
+              <span className="font-bold text-primary">0m (Kickoff)</span>
+              <span>+30m</span>
+              <span>+60m (Egress Exit)</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4 shrink-0 bg-surface-container/40 p-3 rounded-lg border border-outline-variant/20 w-full md:w-auto">
+            <div className="text-center md:w-28">
+              <span className="text-[9px] text-outline block uppercase font-bold tracking-wider">Forecast Load</span>
+              <span className="font-mono text-base text-status-go font-bold">
+                {Math.round(getForecastedAttendance(timeOffset) * 100)}%
+              </span>
+            </div>
+            <div className="text-center md:w-28">
+              <span className="text-[9px] text-outline block uppercase font-bold tracking-wider">Proj. Delays</span>
+              <span className="font-mono text-base text-status-critical font-bold">
+                {getForecastedDelay(timeOffset)} mins
+              </span>
+            </div>
+          </div>
+        </div>
+
         {activeTab === "perimeter" && (
           <div className="grid grid-cols-12 gap-6 animate-fade-in">
             {/* Middle Column (Lg: 8): Map & Roads */}
@@ -852,12 +1020,25 @@ export default function App() {
                 {/* Quick Trigger Simulated Anomaly Form */}
                 <div className="border-t border-outline-variant/30 p-3 bg-surface-container-low/30">
                   {!showIncidentForm ? (
-                    <button
-                      onClick={() => setShowIncidentForm(true)}
-                      className="w-full bg-slate-100 hover:bg-slate-200 border border-outline-variant/50 text-on-surface-variant text-xs py-1.5 rounded-lg transition-colors font-medium flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-sm">add_circle</span> Inject Simulated Incident
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setShowIncidentForm(true)}
+                        className="flex-1 bg-slate-100 hover:bg-slate-200 border border-outline-variant/50 text-on-surface-variant text-xs py-1.5 rounded-lg transition-colors font-medium flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-sm">add_circle</span> Inject Simulated Incident
+                      </button>
+                      <button
+                        onClick={() => handleToggleEvacuation(!state?.evacuationModeActive)}
+                        className={`flex-1 border text-xs py-1.5 rounded-lg transition-colors font-bold flex items-center justify-center gap-1.5 cursor-pointer ${
+                          state?.evacuationModeActive 
+                            ? "bg-status-go/10 border-status-go text-status-go hover:bg-status-go/20"
+                            : "bg-status-critical/10 border-status-critical text-status-critical hover:bg-status-critical/20"
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-sm">warning</span>
+                        {state?.evacuationModeActive ? "Clear Evacuation Drill" : "Initiate Evacuation Drill"}
+                      </button>
+                    </div>
                   ) : (
                     <form onSubmit={handleCreateIncident} className="space-y-2 text-xs flex flex-col">
                       <div className="flex justify-between items-center pb-1 border-b border-outline-variant/20">
@@ -978,6 +1159,7 @@ export default function App() {
                       <p className="text-on-surface-variant leading-relaxed max-h-[80px] overflow-y-auto">{announcementDraft.content}</p>
                       <div className="flex justify-end gap-1.5 pt-1">
                         <button onClick={() => setAnnouncementDraft(null)} className="text-outline hover:text-on-surface text-[9px]">Discard</button>
+                        <button onClick={() => handleSpeak(announcementDraft.content)} className="bg-slate-100 hover:bg-slate-200 text-on-surface border border-outline-variant/30 px-2 py-0.5 rounded text-[9px] font-bold cursor-pointer">Play Draft</button>
                         <button onClick={handlePublishAnnouncement} className="bg-primary text-white px-2 py-0.5 rounded text-[9px] font-bold cursor-pointer">Publish</button>
                       </div>
                     </div>
@@ -1007,12 +1189,21 @@ export default function App() {
                           </div>
                           <p className="text-on-surface-variant text-[11px] leading-relaxed">{ann.content}</p>
                         </div>
-                        <button
-                          onClick={() => handleClearAnnouncement(ann.id, ann.title)}
-                          className="text-[9px] font-bold text-status-critical border border-status-critical/30 hover:bg-status-critical/10 px-2 py-1 rounded transition-colors"
-                        >
-                          Clear
-                        </button>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            onClick={() => handleSpeak(ann.content)}
+                            className="text-[9px] font-bold text-primary border border-primary/30 hover:bg-primary/10 px-2 py-1 rounded transition-colors"
+                            title="Play Announcement Speech"
+                          >
+                            Play
+                          </button>
+                          <button
+                            onClick={() => handleClearAnnouncement(ann.id, ann.title)}
+                            className="text-[9px] font-bold text-status-critical border border-status-critical/30 hover:bg-status-critical/10 px-2 py-1 rounded transition-colors"
+                          >
+                            Clear
+                          </button>
+                        </div>
                       </div>
                     ))
                   )}

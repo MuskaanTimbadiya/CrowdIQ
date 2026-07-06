@@ -11,7 +11,8 @@ import {
   RoadStatus,
   CrowdIncident,
   OptimizationAction,
-  Announcement
+  Announcement,
+  WeatherCondition
 } from "./src/types";
 
 dotenv.config();
@@ -272,7 +273,10 @@ let state: SimulationState = {
   roads: defaultRoads("metlife"),
   incidents: defaultIncidents(),
   optimizations: defaultOptimizations(),
-  lastUpdated: new Date().toISOString()
+  lastUpdated: new Date().toISOString(),
+  weather: "SUNNY",
+  evacuationModeActive: false,
+  totalVolunteersPool: 100
 };
 
 // Global active announcements list
@@ -301,21 +305,52 @@ let activeAnnouncements: Announcement[] = [
 
 // Helper to recalculate wait times dynamically based on queue and throughput
 const updateWaitTimesAndQueues = () => {
+  // Weather multipliers
+  let throughputMultiplier = 1.0;
+  let speedMultiplier = 1.0;
+  let waitMultiplier = 1.0;
+
+  if (state.weather === "RAINY") {
+    throughputMultiplier = 0.85;
+    speedMultiplier = 0.75;
+    waitMultiplier = 1.30;
+  } else if (state.weather === "LIGHTNING_STORM") {
+    throughputMultiplier = 0.50;
+    speedMultiplier = 0.50;
+    waitMultiplier = 2.0;
+  }
+
   // Update Gates
   state.gates = state.gates.map(gate => {
-    if (gate.status === "CLOSED") {
+    if (gate.status === "CLOSED" && !state.evacuationModeActive) {
       return { ...gate, queueCount: 0, avgWaitTime: 0 };
     }
+
+    // Base throughput depends on assigned volunteers (base rate + bonus)
+    const baseRate = gate.id === "gate_a" ? 50 : gate.id === "gate_b" ? 80 : gate.id === "gate_c" ? 50 : gate.id === "gate_d" ? 20 : 15;
+    let calcThroughput = Math.max(10, Math.round((baseRate + gate.assignedVolunteers * 4) * throughputMultiplier));
+
+    // If evacuation mode active, all gates are forced OPEN (outbound) and process faster (x1.5 throughput)
+    if (state.evacuationModeActive) {
+      calcThroughput = Math.round(calcThroughput * 1.5);
+    }
+
     // Calculate avgWaitTime = queueCount / throughputRate
-    const wait = gate.throughputRate > 0 ? Math.round(gate.queueCount / gate.throughputRate) : 0;
+    let wait = calcThroughput > 0 ? Math.round((gate.queueCount / calcThroughput) * waitMultiplier) : 99;
+    
     let status = gate.status;
-    if (wait > 30) status = "CRITICAL";
-    else if (wait > 15) status = "CONGESTED";
-    else status = "OPEN";
+    if (state.evacuationModeActive) {
+      status = "OPEN";
+    } else {
+      if (wait > 30) status = "CRITICAL";
+      else if (wait > 15) status = "CONGESTED";
+      else status = "OPEN";
+    }
 
     return {
       ...gate,
       status,
+      throughputRate: calcThroughput,
       avgWaitTime: wait
     };
   });
@@ -323,13 +358,45 @@ const updateWaitTimesAndQueues = () => {
   // Update Road delays
   state.roads = state.roads.map(road => {
     let delay = road.delayMinutes;
+    if (state.evacuationModeActive) {
+      // In evacuation mode, contraflow is automatically active on Stadium Blvd and delays drop
+      if (road.id === "road_stadium_blvd") {
+        return {
+          ...road,
+          congestion: "MEDIUM",
+          avgSpeed: Math.round(25 * speedMultiplier),
+          delayMinutes: Math.max(2, Math.round(delay * 0.7)),
+          laneControlsActive: true
+        };
+      }
+    }
+
     if (road.congestion === "GRIDLOCK") delay = Math.round(delay * 1.1 + 1);
     else if (road.congestion === "HIGH") delay = Math.round(delay * 1.05);
     else if (road.congestion === "LOW") delay = 0;
 
+    // Adjust speed based on weather and congestion
+    let baseSpeed = road.id === "road_bypass_ave" ? 45 : road.id === "road_stadium_blvd" ? 30 : 40;
+    let speed = Math.round(baseSpeed * speedMultiplier);
+    if (road.congestion === "GRIDLOCK") speed = Math.round(speed * 0.15);
+    else if (road.congestion === "HIGH") speed = Math.round(speed * 0.4);
+    else if (road.congestion === "MEDIUM") speed = Math.round(speed * 0.7);
+
     return {
       ...road,
+      avgSpeed: Math.max(3, speed),
       delayMinutes: delay
+    };
+  });
+
+  // Update Transit wait times under bad weather
+  state.transit = state.transit.map(t => {
+    let wait = t.avgWaitTime;
+    if (state.weather === "RAINY") wait = Math.round(wait * 1.2);
+    else if (state.weather === "LIGHTNING_STORM") wait = Math.round(wait * 1.5);
+    return {
+      ...t,
+      avgWaitTime: wait
     };
   });
 
@@ -372,6 +439,8 @@ app.post("/api/state/phase", (req, res) => {
 
   if (phase && ["ingress", "halftime", "egress"].includes(phase)) {
     currentPhase = phase;
+    state.weather = "SUNNY";
+    state.evacuationModeActive = false;
     const coeff = currentStadiumId === "metlife" ? 1.0 : currentStadiumId === "azteca" ? 1.15 : 0.85;
 
     if (phase === "ingress") {
@@ -945,6 +1014,87 @@ app.post("/api/broadcast/clear", (req, res) => {
     return ann;
   });
   res.json({ success: true, activeAnnouncements });
+});
+
+
+// 11. Update Weather Condition
+app.post("/api/state/weather", (req, res) => {
+  const { weather } = req.body;
+  if (!["SUNNY", "RAINY", "LIGHTNING_STORM"].includes(weather)) {
+    return res.status(400).json({ error: "Invalid weather condition" });
+  }
+  state.weather = weather as any;
+  updateWaitTimesAndQueues();
+  res.json(state);
+});
+
+// 12. Toggle Evacuation drill mode
+app.post("/api/state/evacuation", (req, res) => {
+  const { active } = req.body;
+  if (typeof active !== "boolean") {
+    return res.status(400).json({ error: "Invalid active parameter" });
+  }
+  state.evacuationModeActive = active;
+  if (active) {
+    // Create an emergency critical incident
+    const evacIncident: CrowdIncident = {
+      id: `inc_evac_${Date.now()}`,
+      location: "All Zones (Stadium-Wide)",
+      severity: "CRITICAL",
+      description: "EVACUATION DRILL ACTIVE. All gates reversed to egress. Contraflow activated on Stadium Blvd. Please direct fans to nearest rail or shuttle terminal.",
+      timestamp: new Date().toISOString(),
+      resolved: false
+    };
+    state.incidents.unshift(evacIncident);
+  } else {
+    // Resolve evacuation incidents
+    state.incidents = state.incidents.map(inc => {
+      if (inc.id.startsWith("inc_evac_")) {
+        return { ...inc, resolved: true };
+      }
+      return inc;
+    });
+  }
+  updateWaitTimesAndQueues();
+  res.json(state);
+});
+
+// 13. Redeploy volunteer staff to gates
+app.post("/api/staff/redeploy", (req, res) => {
+  const { gateId, change } = req.body;
+  if (typeof gateId !== "string" || typeof change !== "number") {
+    return res.status(400).json({ error: "Invalid parameters" });
+  }
+  
+  // Find the gate
+  const gate = state.gates.find(g => g.id === gateId);
+  if (!gate) {
+    return res.status(404).json({ error: "Gate not found" });
+  }
+
+  // Calculate current assigned volunteers across all gates
+  const currentlyAssigned = state.gates.reduce((sum, g) => sum + g.assignedVolunteers, 0);
+  const remainingPool = state.totalVolunteersPool - currentlyAssigned;
+
+  if (change > 0 && remainingPool < change) {
+    return res.status(400).json({ error: "Insufficient volunteers in pool" });
+  }
+  if (change < 0 && gate.assignedVolunteers + change < 0) {
+    return res.status(400).json({ error: "Cannot reduce assigned volunteers below zero" });
+  }
+
+  state.gates = state.gates.map(g => {
+    if (g.id === gateId) {
+      return {
+        ...g,
+        assignedVolunteers: g.assignedVolunteers + change
+      };
+    }
+    return g;
+  });
+
+  updateWaitTimesAndQueues();
+  res.json(state);
 });
 
 
