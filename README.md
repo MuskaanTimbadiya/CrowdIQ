@@ -51,10 +51,24 @@ To keep secret credentials completely hidden from the browser, all AI requests a
 *   **Security**: No API keys are exposed to the client; all LLM operations use the server-side `@google/genai` SDK with strict schema safety.
 *   **Performance**: Fast, responsive client states with smooth animations (`motion`).
 *   **Universal Accessibility**: Prominent accessibility checks, step-free access flags, and wheelchair-friendly gate routing warnings.
+*   **Vercel Serverless Ready**: Fully configured for serverless hosting on Vercel via [vercel.json](file:///Users/muskaantimbadiya/CrowdIQ/CrowdIQ/vercel.json) and [api/index.ts](file:///Users/muskaantimbadiya/CrowdIQ/CrowdIQ/api/index.ts).
+*   **API Test Suite**: Self-contained integration testing using Node's native fetch API.
 
 ---
 
-## 5. Assumptions Made
+## 5. Automated Testing & Verification
+
+To verify that the server endpoints and LLM completions function correctly, run the integration test suite:
+
+```bash
+npm run test
+```
+
+This runs 8 automated assertions verifying state loads, simulated incident injections, resolutions, AI optimizations, and translations.
+
+---
+
+## 6. Assumptions Made
 1.  **Sensor Telemetry**: Real-time traffic flows and gate arrival rates are simulated mathematically to mimic realistic stadium ingress/egress curves (e.g., higher ingress congestion 75 minutes before kickoff).
 2.  **Multilingualism**: Fans representing diverse national teams need instant support. Gemini dynamically detects the language and automatically formats replies in the corresponding tongue.
 3.  **Fallback Capability**: In cases where the `GEMINI_API_KEY` is not present, the system seamlessly activates local heuristic operations so the app remains fully functional and testable.
