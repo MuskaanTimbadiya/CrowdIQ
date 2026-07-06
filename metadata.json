@@ -1,6 +1,6 @@
 {
-  "name": "FIFA World Cup 2026 Stadium Traffic & Fan Guidance AI",
-  "description": "A GenAI-powered dashboard and real-time simulator for optimization of traffic, gates, and transit queues, plus dynamic multilingual fan routing for World Cup 2026 stadiums.",
+  "name": "CrowdIQ",
+  "description": "A highly polished, GenAI-powered crowd logistics and transport management platform for World Cup 2026 stadiums. Dynamic simulations with grounded AI dispatch core, digital overhead broadcast, and multilingual fan assistance.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

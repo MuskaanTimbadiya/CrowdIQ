@@ -382,13 +382,13 @@ export default function App() {
       <header className="px-6 py-3.5 bg-slate-950/80 backdrop-blur-md border-b border-slate-800/80 flex flex-col md:flex-row items-center justify-between gap-4 sticky top-0 z-40 shadow-xl shadow-slate-950/25" id="main-header">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-indigo-500 to-emerald-500 rounded-lg flex items-center justify-center font-display font-extrabold text-white shadow-lg shadow-indigo-500/10 text-xs tracking-wider border border-white/10 animate-pulse">
-            FWC
+            CIQ
           </div>
           <div>
-            <h1 className="text-base font-display font-bold tracking-tight text-white leading-none uppercase">FIFA OPS COMMAND CENTER</h1>
+            <h1 className="text-base font-display font-bold tracking-tight text-white leading-none uppercase">CROWDIQ OPS COMMAND CENTER</h1>
             <p className="text-[10px] text-slate-400 font-mono tracking-widest mt-1.5 flex items-center gap-1.5">
               <span className="inline-block w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
-              FIFA World Cup 2026 • MetLife Stadium • MATCHDAY INTELLIGENCE
+              CrowdIQ Live Intelligence • FIFA World Cup 2026 • MetLife Stadium
             </p>
           </div>
         </div>
@@ -1303,7 +1303,7 @@ export default function App() {
             </div>
           </div>
           <div className="text-right text-[10px] text-slate-500 shrink-0 self-end font-sans">
-            FIFA World Cup 2026 Host Stadium Command Center • GenAI Secured Proxy API
+            CrowdIQ • FIFA World Cup 2026 Host Stadium Command Center • GenAI Secured Proxy API
           </div>
         </div>
       </footer>
