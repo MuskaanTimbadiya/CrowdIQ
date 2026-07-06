@@ -10,32 +10,6 @@ import {
   Announcement
 } from "./types";
 import { StadiumMap } from "./components/StadiumMap";
-import {
-  Compass,
-  Activity,
-  AlertTriangle,
-  CheckCircle2,
-  Sliders,
-  Volume2,
-  Users,
-  Train,
-  Bus,
-  Car,
-  Clock,
-  Send,
-  Sparkles,
-  RefreshCw,
-  Plus,
-  Trash2,
-  Languages,
-  ShieldAlert,
-  ArrowRight,
-  Accessibility,
-  Check,
-  ChevronRight,
-  WifiOff,
-  Lightbulb
-} from "lucide-react";
 
 export default function App() {
   // Core states
@@ -43,6 +17,7 @@ export default function App() {
   const [activeAnnouncements, setActiveAnnouncements] = useState<Announcement[]>([]);
   const [currentPhase, setCurrentPhase] = useState<"ingress" | "halftime" | "egress">("ingress");
   const [selectedStadiumId, setSelectedStadiumId] = useState<string>("metlife");
+  const [activeTab, setActiveTab] = useState<string>("perimeter");
 
   // Interaction / Selection states
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
@@ -50,13 +25,16 @@ export default function App() {
   const [selectedAssetType, setSelectedAssetType] = useState<'gate' | 'transit' | 'road' | 'incident' | ''>("");
   const [selectedAssetDetails, setSelectedAssetDetails] = useState<string>("");
 
+  // Assistant states
+  const [showAssistant, setShowAssistant] = useState<boolean>(true);
+
   // Chat states
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
     {
       id: "msg_init",
       sender: "system",
       text: "👋 Welcome to FIFA 2026 Arena Volunt-AI Guidance. I am connected directly to stadium control systems to assist with route optimization, traffic bypasses, and multi-lingual help.",
-      timestamp: new Date().toLocaleTimeString()
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
   const [currentMessage, setCurrentMessage] = useState<string>("");
@@ -65,9 +43,9 @@ export default function App() {
   const [localTime, setLocalTime] = useState<string>("");
 
   useEffect(() => {
-    setLocalTime(new Date().toLocaleTimeString());
+    setLocalTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     const interval = setInterval(() => {
-      setLocalTime(new Date().toLocaleTimeString());
+      setLocalTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     }, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -109,7 +87,7 @@ export default function App() {
   }, [chatHistory]);
 
   const addLog = (message: string) => {
-    const time = new Date().toLocaleTimeString();
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     setOperationLogs(prev => [`[${time}] ${message}`, ...prev.slice(0, 15)]);
   };
 
@@ -230,7 +208,7 @@ export default function App() {
       }
     } catch (e) {
       console.error("Failed to fetch AI optimizations:", e);
-      addLog("Failed to reach Gemini AI services. Simulator loaded pre-configured rules.");
+      addLog("Failed to reach Gemini AI. Loaded local rules.");
     } finally {
       setLoadingAI(false);
     }
@@ -252,7 +230,7 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         setAnnouncementDraft(data.draft);
-        addLog(`Gemini drafted dynamic notice: "${data.draft.title}" with English, Spanish, French translations.`);
+        addLog(`Gemini drafted dynamic notice: "${data.draft.title}".`);
       }
     } catch (e) {
       console.error("Failed to draft announcement:", e);
@@ -301,12 +279,11 @@ export default function App() {
   const handleSendChatMessage = async (msgText: string) => {
     if (!msgText.trim()) return;
 
-    // Add user message immediately
     const userMsg: ChatMessage = {
       id: `user_${Date.now()}`,
       sender: "user",
       text: msgText,
-      timestamp: new Date().toLocaleTimeString()
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
     setChatHistory(prev => [...prev, userMsg]);
@@ -335,8 +312,8 @@ export default function App() {
       const errorMsg: ChatMessage = {
         id: `err_${Date.now()}`,
         sender: "ai",
-        text: "⚠️ I had trouble connecting to the real-time AI core. However, looking at local backups: Please note Gate C is highly choked (36 min delay). Use Gate B or D for faster entrance! How else can I assist you?",
-        timestamp: new Date().toLocaleTimeString()
+        text: "⚠️ Real-time AI offline. Note Gate C is highly congested (36 min delay). Use Gate B or D for faster entry!",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setChatHistory(prev => [...prev, errorMsg]);
     } finally {
@@ -350,27 +327,86 @@ export default function App() {
     setSelectedAssetType(type);
     setSelectedAssetDetails(details);
     if (id) {
-      addLog(`Selected asset: ${name} (${type.toUpperCase()})`);
+      addLog(`Selected: ${name} (${type.toUpperCase()})`);
     }
   };
 
-  // Helper calculation constants
-  const activeCriticalIncidents = state?.incidents.filter(i => !i.resolved && i.severity === "CRITICAL").length || 0;
-  const activeWarningIncidents = state?.incidents.filter(i => !i.resolved && i.severity === "WARNING").length || 0;
+  const scrollToId = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  const renderAICore = () => {
+    return (
+      <div className="glass-panel rounded-xl p-5 border-t-4 border-primary bg-white shadow-xl shadow-primary/5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <span className="material-symbols-outlined text-primary">psychology</span>
+          </div>
+          <div>
+            <h3 className="font-display font-semibold text-sm text-on-surface font-bold">Gemini AI Dispatch</h3>
+            <p className="text-[9px] font-mono text-outline tracking-widest uppercase font-bold">Engine v2.5 Tactical</p>
+          </div>
+        </div>
+        
+        <p className="text-[11px] text-on-surface-variant mb-4 leading-relaxed bg-primary/5 p-3 rounded-lg border border-primary/10">
+          Evaluate live gate processing and vehicular delays. Generates dynamic operational recommendations.
+        </p>
+        
+        <button
+          onClick={handleTriggerAIOptimize}
+          disabled={loadingAI}
+          className="w-full bg-primary py-2.5 rounded-xl text-white font-bold font-mono text-xs flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/30 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+        >
+          <span className="material-symbols-outlined text-sm">auto_fix_high</span>
+          {loadingAI ? "Analyzing..." : "OPTIMIZE COMMAND"}
+        </button>
+        
+        <div className="mt-4 space-y-3 max-h-[170px] overflow-y-auto pr-1">
+          {state?.optimizations.slice(0, 2).map((opt) => (
+            <div key={opt.id} className={`p-2.5 rounded-lg text-xs border font-mono ${
+              opt.applied ? "bg-slate-50 border-outline-variant/30 opacity-70" : "bg-primary/5 border-primary/20"
+            }`}>
+              <div className="flex justify-between items-start gap-1">
+                <span className="font-bold text-on-surface leading-snug">⚡ {opt.title}</span>
+                <span className="text-[8px] bg-primary/10 text-primary px-1 rounded uppercase font-bold shrink-0">{opt.urgency}</span>
+              </div>
+              <p className="text-[10px] text-on-surface-variant mt-1">{opt.description}</p>
+              <div className="mt-2 flex justify-between items-center text-[9px] text-outline">
+                <span>Impact: {opt.estimatedImpact}</span>
+                {opt.applied ? (
+                  <span className="text-status-go font-bold">Applied</span>
+                ) : (
+                  <button
+                    onClick={() => handleApplyOptimization(opt.id, opt.title)}
+                    className="text-primary hover:underline font-bold"
+                  >
+                    Deploy
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-slate-200 flex flex-col font-sans selection:bg-blue-600 selection:text-white" id="main-application-container">
+    <div className="min-h-screen bg-surface-dim text-on-surface flex flex-col font-sans selection:bg-primary selection:text-on-primary" id="main-application-container">
       
       {/* GLOBAL ACTIVE EMERGENCY SCROLLING TICKER */}
       {activeAnnouncements.some(a => a.broadcastActive) && (
-        <div className="bg-red-950/90 border-b border-red-700/50 py-1.5 px-4 overflow-hidden relative flex items-center z-50 shadow-md">
+        <div className="bg-red-50 border-b border-red-200 py-1.5 px-4 overflow-hidden relative flex items-center z-30 shadow-sm mt-20">
           <div className="bg-red-600 text-white text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded flex items-center gap-1 shrink-0 animate-pulse font-mono">
-            <Volume2 className="w-3.5 h-3.5" /> LIVE BROADCAST TICKER
+            <span className="material-symbols-outlined text-[13px]">volume_up</span> LIVE BROADCAST TICKER
           </div>
-          <div className="ml-4 flex gap-8 animate-marquee whitespace-nowrap text-xs font-mono font-medium text-red-200">
-            {activeAnnouncements.filter(a => a.broadcastActive).map((ann, i) => (
+          <div className="ml-4 flex gap-8 animate-marquee whitespace-nowrap text-xs font-mono font-medium text-red-700">
+            {activeAnnouncements.filter(a => a.broadcastActive).map((ann) => (
               <span key={ann.id} className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-red-400 rounded-full" />
+                <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
                 <strong>[{ann.title}]</strong> {ann.content} (Target: {ann.targetAudience})
               </span>
             ))}
@@ -379,932 +415,718 @@ export default function App() {
       )}
 
       {/* TOP NAVIGATION HEADER */}
-      <header className="px-6 py-3.5 bg-slate-950/80 backdrop-blur-md border-b border-slate-800/80 flex flex-col md:flex-row items-center justify-between gap-4 sticky top-0 z-40 shadow-xl shadow-slate-950/25" id="main-header">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-indigo-500 to-emerald-500 rounded-lg flex items-center justify-center font-display font-extrabold text-white shadow-lg shadow-indigo-500/10 text-xs tracking-wider border border-white/10 animate-pulse">
-            CIQ
+      <header className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center w-full px-8 h-20 bg-white/90 backdrop-blur-xl border-b border-outline-variant/30 shadow-sm" id="main-header">
+        <div className="flex items-center gap-6">
+          <span className="font-display font-bold text-2xl text-primary tracking-tighter">CrowdIQ</span>
+          <div className="h-8 w-[1px] bg-outline-variant hidden md:block"></div>
+          <nav className="hidden lg:flex items-center gap-8">
+            <span onClick={() => setActiveTab('perimeter')} className={`font-mono text-xs cursor-pointer pb-1 transition-all ${activeTab === 'perimeter' ? 'text-primary border-b-2 border-primary font-bold' : 'text-on-surface-variant font-medium hover:text-primary'}`}>Perimeter</span>
+            <span onClick={() => setActiveTab('gates')} className={`font-mono text-xs cursor-pointer pb-1 transition-all ${activeTab === 'gates' ? 'text-primary border-b-2 border-primary font-bold' : 'text-on-surface-variant font-medium hover:text-primary'}`}>Gates</span>
+            <span onClick={() => setActiveTab('logistics')} className={`font-mono text-xs cursor-pointer pb-1 transition-all ${activeTab === 'logistics' ? 'text-primary border-b-2 border-primary font-bold' : 'text-on-surface-variant font-medium hover:text-primary'}`}>Logistics</span>
+            <span onClick={() => setActiveTab('incidents')} className={`font-mono text-xs cursor-pointer pb-1 transition-all ${activeTab === 'incidents' ? 'text-primary border-b-2 border-primary font-bold' : 'text-on-surface-variant font-medium hover:text-primary'}`}>Incidents</span>
+            <span onClick={() => setActiveTab('broadcast')} className={`font-mono text-xs cursor-pointer pb-1 transition-all ${activeTab === 'broadcast' ? 'text-primary border-b-2 border-primary font-bold' : 'text-on-surface-variant font-medium hover:text-primary'}`}>Broadcast</span>
+          </nav>
+        </div>
+
+        {/* Floating match telemetry pill */}
+        <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-6 glass-panel px-6 py-2 rounded-full border border-primary/10 bg-white">
+          <div className="flex flex-col items-center">
+            <span className="font-mono text-[9px] text-outline uppercase tracking-widest leading-none">Quarter-Final</span>
+            <span className="font-display font-bold text-xs text-on-surface mt-0.5">ARG <span className="text-primary mx-0.5">vs</span> ENG</span>
           </div>
-          <div>
-            <h1 className="text-base font-display font-bold tracking-tight text-white leading-none uppercase">CROWDIQ OPS COMMAND CENTER</h1>
-            <p className="text-[10px] text-slate-400 font-mono tracking-widest mt-1.5 flex items-center gap-1.5">
-              <span className="inline-block w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
-              CrowdIQ Live Intelligence • FIFA World Cup 2026 • MetLife Stadium
-            </p>
+          <div className="h-6 w-[1px] bg-outline-variant"></div>
+          <div className="flex flex-col items-center">
+            <span className="font-mono text-[9px] text-outline uppercase tracking-widest leading-none">Attendance</span>
+            <div className="flex items-baseline gap-0.5 mt-0.5">
+              <span className="font-mono text-xs text-status-go font-bold">{state?.stadium.currentAttendance.toLocaleString()}</span>
+              <span className="font-mono text-[10px] text-outline">/ {state?.stadium.capacity.toLocaleString()}</span>
+            </div>
+          </div>
+          <div className="h-6 w-[1px] bg-outline-variant"></div>
+          <div className="flex flex-col items-center">
+            <span className="font-mono text-[9px] text-outline uppercase tracking-widest leading-none">Local Time</span>
+            <span className="font-mono text-xs text-primary font-bold mt-0.5">{localTime || "06:37:16 AM"}</span>
           </div>
         </div>
 
-        {/* SIMULATOR STADIUM & MATCH STAGE SELECTOR */}
-        <div className="flex flex-wrap items-center gap-2 bg-slate-900/90 border border-slate-800/85 p-1 rounded-lg shadow-inner">
-          <div className="flex items-center gap-1.5 px-2">
-            <span className="text-[9px] text-slate-400 font-mono uppercase tracking-wider font-semibold">Arena:</span>
+        <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-2 bg-slate-100 border border-slate-200 p-1 rounded-lg">
+            <span className="text-[9px] text-slate-500 font-mono uppercase tracking-wider font-semibold px-1">Arena:</span>
             <select
               value={selectedStadiumId}
               onChange={(e) => {
                 setSelectedStadiumId(e.target.value);
                 handlePhaseChange(currentPhase, e.target.value);
               }}
-              className="bg-slate-950 border border-slate-800 text-xs text-white rounded-md px-2 py-1 font-sans focus:outline-none focus:ring-1 focus:ring-blue-500/60 focus:border-blue-500/80 transition-all"
+              className="bg-white border border-slate-200 text-xs text-on-surface rounded px-1.5 py-0.5 font-sans focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all cursor-pointer"
             >
-              <option value="metlife">MetLife Stadium (NY/NJ)</option>
-              <option value="azteca">Estadio Azteca (Mexico City)</option>
-              <option value="sofi">SoFi Stadium (Los Angeles)</option>
+              <option value="metlife">MetLife (NY/NJ)</option>
+              <option value="azteca">Estadio Azteca (MX)</option>
+              <option value="sofi">SoFi Stadium (LA)</option>
             </select>
           </div>
+          <div className="w-9 h-9 rounded-full border border-secondary/20 overflow-hidden shadow-inner hidden md:block">
+            <img className="w-full h-full object-cover" alt="Director Avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPkq0M20VwenWX3hOvHaSdjSAh__Y7H8ZdC4qhDw9rGyzBvZo2wZmW1rZWvjdcmgO56Kk4AbamaWocDNun37m-Cym_vZf3y0P6womwIKdQ1QCLvWv8yVkpePJo9qo8Y7R-klEWnV2hDEw2orNgu8RvRcadB8xEsWmit3RYKjG3_8yheqrFP-mCZ6KI6aPNsTTGCg0HPQIjJl3wShxiGTM-_MsjtWH41M7ijlqHZCMVjrnBLykgmWc"/>
+          </div>
+        </div>
+      </header>
 
-          <div className="h-5 w-[1px] bg-slate-800" />
-
-          <div className="flex items-center gap-1 px-1">
+      {/* Side NavBar */}
+      <aside className="fixed left-0 top-0 h-full flex flex-col z-40 bg-white border-r border-outline-variant w-20 hover:w-64 transition-all duration-300 group shadow-lg shadow-black/5">
+        <div className="mt-24 px-4 mb-8">
+          <div className="flex items-center gap-4 group-hover:px-2 transition-all">
+            <div className="w-10 h-10 flex items-center justify-center bg-primary/5 rounded-lg shrink-0">
+              <span className="material-symbols-outlined text-primary">analytics</span>
+            </div>
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity overflow-hidden">
+              <p className="font-mono text-xs text-on-surface font-bold truncate">System Intelligence</p>
+              <p className="font-mono text-[9px] text-outline truncate uppercase">FIFA World Cup 2026</p>
+            </div>
+          </div>
+        </div>
+        <nav className="flex flex-col gap-2 flex-grow overflow-y-auto overflow-x-hidden px-2">
+          {/* Command Tab */}
+          <span onClick={() => setActiveTab('perimeter')} className={`rounded-xl p-3 flex items-center gap-4 transition-all cursor-pointer ${activeTab === 'perimeter' ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container'}`}>
+            <span className="material-symbols-outlined shrink-0">dashboard</span>
+            <span className="font-mono text-xs opacity-0 group-hover:opacity-100 transition-opacity">Command</span>
+          </span>
+          {/* Analytics / Gates Tab */}
+          <span onClick={() => setActiveTab('gates')} className={`rounded-xl p-3 flex items-center gap-4 transition-all cursor-pointer group/item ${activeTab === 'gates' ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container'}`}>
+            <span className="material-symbols-outlined shrink-0 group-hover/item:translate-x-1 transition-transform">monitoring</span>
+            <span className="font-mono text-xs opacity-0 group-hover:opacity-100 transition-opacity">Analytics</span>
+          </span>
+          {/* Transit Tab */}
+          <span onClick={() => setActiveTab('logistics')} className={`rounded-xl p-3 flex items-center gap-4 transition-all cursor-pointer group/item ${activeTab === 'logistics' ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container'}`}>
+            <span className="material-symbols-outlined shrink-0 group-hover/item:translate-x-1 transition-transform">directions_bus</span>
+            <span className="font-mono text-xs opacity-0 group-hover:opacity-100 transition-opacity">Transit</span>
+          </span>
+          {/* Security Tab */}
+          <span onClick={() => setActiveTab('incidents')} className={`rounded-xl p-3 flex items-center gap-4 transition-all cursor-pointer group/item ${activeTab === 'incidents' ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container'}`}>
+            <span className="material-symbols-outlined shrink-0 group-hover/item:translate-x-1 transition-transform">security</span>
+            <span className="font-mono text-xs opacity-0 group-hover:opacity-100 transition-opacity">Security</span>
+          </span>
+          {/* Communications Tab */}
+          <span onClick={() => setActiveTab('broadcast')} className={`rounded-xl p-3 flex items-center gap-4 transition-all cursor-pointer group/item ${activeTab === 'broadcast' ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container'}`}>
+            <span className="material-symbols-outlined shrink-0 group-hover/item:translate-x-1 transition-transform">campaign</span>
+            <span className="font-mono text-xs opacity-0 group-hover:opacity-100 transition-opacity">Communications</span>
+          </span>
+        </nav>
+        <div className="p-4 flex flex-col gap-2 mt-auto border-t border-outline-variant/30">
+          <div className="hidden group-hover:flex gap-1.5 mb-2 font-mono text-[9px]">
             <button
               onClick={() => handlePhaseChange("ingress")}
-              className={`text-xs px-3 py-1 rounded-md transition-all font-medium ${
-                currentPhase === "ingress"
-                  ? "bg-blue-600 text-white shadow shadow-blue-600/20 font-semibold scale-102"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+              className={`flex-1 py-1 rounded text-center font-bold border transition-all cursor-pointer ${
+                currentPhase === "ingress" ? "bg-primary text-white border-primary" : "bg-white text-on-surface border-outline-variant/50 hover:bg-slate-50"
               }`}
-              title="Simulate Ingress pre-match flow"
             >
               Ingress
             </button>
             <button
               onClick={() => handlePhaseChange("halftime")}
-              className={`text-xs px-3 py-1 rounded-md transition-all font-medium ${
-                currentPhase === "halftime"
-                  ? "bg-blue-600 text-white shadow shadow-blue-600/20 font-semibold scale-102"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+              className={`flex-1 py-1 rounded text-center font-bold border transition-all cursor-pointer ${
+                currentPhase === "halftime" ? "bg-primary text-white border-primary" : "bg-white text-on-surface border-outline-variant/50 hover:bg-slate-50"
               }`}
-              title="Simulate halftime intermission surge"
             >
-              Halftime
+              Half
             </button>
             <button
               onClick={() => handlePhaseChange("egress")}
-              className={`text-xs px-3 py-1 rounded-md transition-all font-medium ${
-                currentPhase === "egress"
-                  ? "bg-blue-600 text-white shadow shadow-blue-600/20 font-semibold scale-102"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+              className={`flex-1 py-1 rounded text-center font-bold border transition-all cursor-pointer ${
+                currentPhase === "egress" ? "bg-primary text-white border-primary" : "bg-white text-on-surface border-outline-variant/50 hover:bg-slate-50"
               }`}
-              title="Simulate post-match massive exit flow"
             >
               Egress
             </button>
           </div>
-
           <button
             onClick={fetchState}
-            className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors"
-            title="Force full state sync"
+            className="p-2 border border-outline-variant/50 rounded-xl text-on-surface-variant hover:text-primary hover:bg-surface-container flex items-center justify-center transition-all cursor-pointer"
+            title="Sync State"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <span className="material-symbols-outlined text-base">refresh</span>
           </button>
         </div>
-
-        <div className="flex items-center gap-6">
-          <div className="flex gap-4">
-            {state && (
-              <div className="text-right">
-                <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Attendance</p>
-                <p className="text-sm font-mono font-bold text-emerald-400">
-                  {state.stadium.currentAttendance.toLocaleString()} / {state.stadium.capacity.toLocaleString()}
-                </p>
-              </div>
-            )}
-            <div className="text-right border-l border-slate-700 pl-4">
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Local Time</p>
-              <p className="text-sm font-mono font-bold text-white">{localTime || "18:42:05 EDT"}</p>
-            </div>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center shadow-lg">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-          </div>
-        </div>
-      </header>
-
-      {/* SYSTEM META OVERVIEW */}
-      {state && (
-        <section className="bg-slate-900/40 border-b border-slate-700/50 px-6 py-2 text-xs font-mono" id="sub-header-banner">
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-2 text-slate-400">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-              <span className="flex items-center gap-1 text-white font-semibold">
-                🏟️ Match Info: <span className="text-blue-400">{state.stadium.matchInfo}</span>
-              </span>
-              <span>•</span>
-              <span className="text-slate-300">City: {state.stadium.city}</span>
-              <span>•</span>
-              <span className="text-slate-300">Phase: <span className="text-emerald-400 font-bold uppercase">{currentPhase}</span> ({state.stadium.timeToKickoff})</span>
-            </div>
-            <div className="text-[11px] text-slate-500">
-              Last Telemetry: {new Date(state.lastUpdated).toLocaleTimeString()}
-            </div>
-          </div>
-        </section>
-      )}
+      </aside>
 
       {/* MAIN LAYOUT CONTAINER */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-5" id="dashboard-grid-container">
+      <main className="flex-1 ml-20 mt-20 p-6 md:p-8 pb-16 max-w-[1800px] w-full mx-auto" id="dashboard-grid-container">
         
-        {/* LEFT COLUMN (Lg: 4/12): STADIUM OPERATIONS MONITOR (Telemetry Data) */}
-        <section className="lg:col-span-4 flex flex-col gap-4" id="operations-telemetry-column">
-          
-          {/* STADIUM CAPACITY & ATTENDANCE METER */}
-          {state && (
-            <div className="bg-[#111827]/80 backdrop-blur-md border border-slate-700/60 rounded-xl p-4 shadow-xl">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-semibold">
-                  🏟️ ARENA FILL RATE
-                </span>
-                <span className="text-xs font-mono font-bold text-blue-400">
-                  {Math.round((state.stadium.currentAttendance / state.stadium.capacity) * 100)}% Capacity
-                </span>
-              </div>
-              <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden mb-2.5">
-                <div
-                  className="bg-gradient-to-r from-blue-500 to-emerald-500 h-full rounded-full transition-all duration-1000"
-                  style={{ width: `${(state.stadium.currentAttendance / state.stadium.capacity) * 100}%` }}
+        {activeTab === "perimeter" && (
+          <div className="grid grid-cols-12 gap-6 animate-fade-in">
+            {/* Middle Column (Lg: 8): Map & Roads */}
+            <div className="col-span-12 lg:col-span-8 flex flex-col gap-6" id="main-map-column">
+              {state && (
+                <StadiumMap
+                  gates={state.gates}
+                  transit={state.transit}
+                  roads={state.roads}
+                  incidents={state.incidents}
+                  selectedAssetId={selectedAssetId}
+                  onSelectAsset={selectAssetOnMap}
                 />
-              </div>
-              <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-                <div>
-                  <span className="text-slate-500">Live Attendance</span>
-                  <span className="block text-white font-bold font-sans text-sm">
-                    {state.stadium.currentAttendance.toLocaleString()}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-slate-500">Max Seat Count</span>
-                  <span className="block text-white font-bold font-sans text-sm">
-                    {state.stadium.capacity.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* PORTALS & GATES LIST */}
-          <div className="bg-[#111827]/80 backdrop-blur-md border border-slate-700/60 rounded-xl p-4 shadow-xl">
-            <h3 className="font-display font-semibold text-sm text-white mb-3 tracking-wide uppercase flex items-center justify-between">
-              <span>🚪 PORTALS & GATE QUEUES</span>
-              <span className="text-[10px] font-mono text-slate-500">Normal Flow: ~10m</span>
-            </h3>
-
-            <div className="flex flex-col gap-2.5 max-h-[280px] overflow-y-auto pr-1">
-              {state?.gates.map((gate) => {
-                const isSelected = selectedAssetId === gate.id;
-                return (
-                  <div
-                    key={gate.id}
-                    onClick={() => selectAssetOnMap(gate.id, gate.name, 'gate', `Throughput is currently ${gate.throughputRate} fans/minute with ${gate.assignedVolunteers} active lane monitors.`)}
-                    className={`p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
-                      isSelected
-                        ? "bg-blue-950/40 border-blue-500/80 shadow-md"
-                        : "bg-slate-800/40 border-slate-700/40 hover:border-slate-600 hover:bg-slate-800/60"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between font-medium mb-1.5">
-                      <span className="text-white flex items-center gap-1.5 font-sans font-semibold">
-                        <span className={`w-2 h-2 rounded-full ${
-                          gate.status === "OPEN" ? "bg-green-500" :
-                          gate.status === "CONGESTED" ? "bg-amber-500" : "bg-red-500"
-                        }`} />
-                        {gate.name}
-                      </span>
-                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold ${
-                        gate.status === "OPEN" ? "bg-green-950 text-green-400 border border-green-900/40" :
-                        gate.status === "CONGESTED" ? "bg-amber-950 text-amber-400 border border-amber-900/40" : "bg-red-950 text-red-400 border border-red-900/40"
-                      }`}>
-                        {gate.status}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2 text-[11px] font-mono text-slate-400 mt-1">
-                      <div>
-                        <span className="text-slate-500 text-[10px] block">Queue count</span>
-                        <span className="text-white font-sans font-semibold text-[13px]">
-                          {gate.queueCount.toLocaleString()} <span className="text-[10px] text-slate-500 font-normal">fans</span>
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-slate-500 text-[10px] block">Wait Time</span>
-                        <span className={`font-sans font-bold text-[13px] ${
-                          gate.avgWaitTime > 25 ? "text-red-400" :
-                          gate.avgWaitTime > 12 ? "text-amber-400" : "text-green-400"
-                        }`}>
-                          {gate.avgWaitTime} <span className="text-[10px] font-normal text-slate-500">mins</span>
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-slate-500 text-[10px] block">Throughput</span>
-                        <span className="text-white font-sans font-semibold">
-                          {gate.throughputRate} <span className="text-[10px] font-normal text-slate-500">/min</span>
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="mt-2 pt-1.5 border-t border-slate-700/60 flex items-center justify-between text-[10px] text-slate-500">
-                      <span className="flex items-center gap-0.5">
-                        👤 {gate.assignedVolunteers} volunteers
-                      </span>
-                      {gate.accessibilityFriendly ? (
-                        <span className="text-emerald-400 flex items-center gap-0.5 font-mono">
-                          <Accessibility className="w-3 h-3" /> Step-Free Access
-                        </span>
-                      ) : (
-                        <span className="text-slate-500 flex items-center gap-0.5 font-mono">
-                          ⚠️ Stairs Only
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* PARKING & TRANSIT METRICS */}
-          <div className="bg-[#111827]/80 backdrop-blur-md border border-slate-700/60 rounded-xl p-4 shadow-xl">
-            <h3 className="font-display font-semibold text-sm text-white mb-3 tracking-wide uppercase flex items-center justify-between">
-              <span>🚍 PARKING & TRANSIT LOAD</span>
-              <span className="text-[10px] font-mono text-slate-500">Flow Rating</span>
-            </h3>
-
-            <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
-              {state?.transit.map((hub) => {
-                const isSelected = selectedAssetId === hub.id;
-                return (
-                  <div
-                    key={hub.id}
-                    onClick={() => selectAssetOnMap(hub.id, hub.name, 'transit', `Transit vehicle frequency has been set to high flow with dynamic metering rules applied.`)}
-                    className={`p-2 rounded-lg border text-xs cursor-pointer transition-all ${
-                      isSelected
-                        ? "bg-blue-950/40 border-blue-500/80 shadow"
-                        : "bg-slate-800/40 border-slate-700/40 hover:border-slate-600 hover:bg-slate-800/60"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-white font-semibold flex items-center gap-1.5 font-sans">
-                        {hub.type === "TRAIN" ? <Train className="w-3.5 h-3.5 text-blue-400" /> :
-                         hub.type === "SHUTTLE" ? <Bus className="w-3.5 h-3.5 text-emerald-400" /> :
-                         hub.type === "RIDESHARE" ? <Users className="w-3.5 h-3.5 text-indigo-400" /> :
-                         <Car className="w-3.5 h-3.5 text-amber-400" />}
-                        {hub.name}
-                      </span>
-                      <span className={`px-1.5 py-0.2 rounded text-[9px] font-mono font-bold ${
-                        hub.status === "FLUID" ? "bg-green-950 text-green-400 border border-green-900/40" :
-                        hub.status === "MODERATE" ? "bg-amber-950 text-amber-400 border border-amber-900/40" : "bg-red-950 text-red-400 border border-red-900/40"
-                      }`}>
-                        {hub.status}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-gray-400">
-                      <div>
-                        <span className="text-slate-500 text-[10px] block">Delay / Wait</span>
-                        <span className="text-white font-sans font-semibold">
-                          {hub.avgWaitTime} minutes
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        {hub.availableSpaces !== undefined ? (
-                          <>
-                            <span className="text-slate-500 text-[10px] block">Spaces left</span>
-                            <span className="text-emerald-400 font-sans font-semibold">
-                              {hub.availableSpaces.toLocaleString()}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="text-slate-500 text-[10px] block">Queue Load</span>
-                            <span className="text-white font-sans font-semibold">
-                              {hub.currentLoad}% Load
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-        </section>
-
-        {/* MIDDLE COLUMN (Lg: 5/12): AERIAL MAP VISUALIZER & LIVE INCIDENT FEED */}
-        <section className="lg:col-span-5 flex flex-col gap-4" id="main-map-column">
-          
-          {/* STADIUM INTERACTIVE MAP */}
-          {state && (
-            <StadiumMap
-              gates={state.gates}
-              transit={state.transit}
-              roads={state.roads}
-              incidents={state.incidents}
-              selectedAssetId={selectedAssetId}
-              onSelectAsset={selectAssetOnMap}
-            />
-          )}
-
-          {/* ACTIVE ROADWAY CORRIDORS */}
-          <div className="bg-[#111827]/80 backdrop-blur-md border border-slate-700/60 rounded-xl p-4 shadow-xl">
-            <h3 className="font-display font-semibold text-sm text-white mb-3 tracking-wide uppercase">
-              🛣️ ACCESS ROADWAYS & CONGESTION
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {state?.roads.map((road) => {
-                const isSelected = selectedAssetId === road.id;
-                return (
-                  <div
-                    key={road.id}
-                    onClick={() => selectAssetOnMap(road.id, road.name, 'road', `${road.name} direction delay is ${road.delayMinutes} mins. Contraflow configuration: ${road.laneControlsActive ? 'ACTIVE' : 'OFF'}`)}
-                    className={`p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
-                      isSelected
-                        ? "bg-blue-950/40 border-blue-500/80 shadow"
-                        : "bg-slate-800/40 border-slate-700/40 hover:border-slate-600 hover:bg-slate-800/60"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-white font-semibold font-sans block">
-                        {road.name}
-                      </span>
-                      <span className="text-[10px] text-slate-500 font-mono">
-                        {road.direction}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between font-mono text-[11px] mt-1.5 text-slate-400">
-                      <span>Congestion:</span>
-                      <span className={`font-bold ${
-                        road.congestion === "LOW" ? "text-green-400" :
-                        road.congestion === "MEDIUM" ? "text-amber-400" : "text-red-400"
-                      }`}>
-                        {road.congestion}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between font-mono text-[11px] text-slate-400 mt-0.5">
-                      <span>Speed:</span>
-                      <span className="text-white font-semibold">{road.avgSpeed} mph</span>
-                    </div>
-
-                    <div className="flex items-center justify-between font-mono text-[11px] text-slate-400 mt-0.5">
-                      <span>Delay:</span>
-                      <span className={`font-bold ${road.delayMinutes > 15 ? "text-red-400" : "text-white"}`}>
-                        +{road.delayMinutes} mins
-                      </span>
-                    </div>
-
-                    {road.laneControlsActive && (
-                      <div className="mt-2 bg-blue-950/85 border border-blue-500/30 text-blue-400 text-[9px] font-mono font-bold rounded py-0.5 px-2 text-center">
-                        🔄 CONTRAFLOW REVERSIBLE ACTIVE
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* INCIDENT OPERATIONS FEED */}
-          <div className="bg-[#111827]/80 backdrop-blur-md border border-slate-700/60 rounded-xl p-4 shadow-xl flex-1 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-display font-semibold text-sm text-white tracking-wide uppercase flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-500" />
-                  INCIDENT RESPONSE COMMAND
+              )}
+              {/* Access Roadways & Congestion */}
+              <div>
+                <h3 className="font-mono text-xs uppercase text-outline mb-3 font-bold">
+                  🛣️ Access Roadways &amp; Congestion
                 </h3>
-                <span className="bg-red-950 text-red-400 border border-red-900/60 text-[10px] font-mono px-2 py-0.5 rounded font-bold">
-                  {state?.incidents.filter(i => !i.resolved).length || 0} ACTIVE
-                </span>
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {state?.roads.map((road) => {
+                    const isSelected = selectedAssetId === road.id;
+                    const delayColor = road.delayMinutes > 15 ? "text-status-critical" : "text-status-go";
+                    const congestionColor = 
+                      road.congestion === "LOW" ? "text-status-go" :
+                      road.congestion === "MEDIUM" ? "text-status-alert" : "text-status-critical";
 
-              {/* Incidents List */}
-              <div className="flex flex-col gap-2 max-h-[160px] overflow-y-auto mb-3 pr-1">
-                {state?.incidents.length === 0 ? (
-                  <p className="text-xs text-slate-500 font-mono text-center py-4">
-                    No active incidents reported. Stadium operations smooth.
-                  </p>
-                ) : (
-                  state?.incidents.map((inc) => (
-                    <div
-                      key={inc.id}
-                      className={`p-2.5 rounded-lg border text-xs flex flex-col justify-between gap-1.5 transition-all ${
-                        inc.resolved
-                          ? "bg-slate-900/40 border-slate-900 opacity-60"
-                          : inc.severity === "CRITICAL"
-                            ? "bg-red-950/20 border-red-900/60"
-                            : "bg-amber-950/20 border-amber-900/60"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <span className="font-semibold text-white block">
-                            📍 {inc.location}
-                          </span>
-                          <span className="text-[10px] text-slate-400 mt-0.5 block font-mono">
-                            {inc.description}
+                    return (
+                      <div
+                        key={road.id}
+                        onClick={() => selectAssetOnMap(road.id, road.name, 'road', `${road.name} direction delay is ${road.delayMinutes} mins. Contraflow configuration: ${road.laneControlsActive ? 'ACTIVE' : 'OFF'}`)}
+                        className={`glass-panel rounded-xl p-4 bg-white cursor-pointer transition-all border ${
+                          isSelected ? "border-primary shadow-md" : "border-outline-variant/40 hover:bg-slate-50"
+                        }`}
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <h4 className="font-mono text-[10px] text-on-surface font-bold leading-tight">{road.name}</h4>
+                          <span className="material-symbols-outlined text-outline text-[16px]">
+                            {road.congestion === "LOW" ? "trending_down" : "trending_up"}
                           </span>
                         </div>
-                        <span className={`text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded ${
-                          inc.resolved ? "bg-slate-800 text-slate-400" :
-                          inc.severity === "CRITICAL" ? "bg-red-900 text-red-200" : "bg-amber-800 text-amber-100"
-                        }`}>
-                          {inc.resolved ? "Resolved" : inc.severity}
-                        </span>
+                        <div className="space-y-1.5 font-mono text-[10px]">
+                          <div className="flex justify-between"><span className="text-outline">Congestion</span><span className={`font-bold ${congestionColor}`}>{road.congestion}</span></div>
+                          <div className="flex justify-between"><span className="text-outline">Avg Speed</span><span className="text-on-surface font-bold">{road.avgSpeed} MPH</span></div>
+                          <div className="flex justify-between"><span className="text-outline">Entry Delay</span><span className={`font-bold ${delayColor}`}>+{road.delayMinutes} MINS</span></div>
+                        </div>
+                        {road.laneControlsActive && (
+                          <div className="mt-3 p-1 bg-surface-container rounded text-[9px] text-center text-outline font-bold uppercase tracking-wider">REVERSIBLE ACTIVE</div>
+                        )}
                       </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
 
-                      <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 pt-1 border-t border-slate-700/60">
-                        <span>Reported: {new Date(inc.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            {/* AI Dispatch side-panel */}
+            <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+              {renderAICore()}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "gates" && (
+          <div className="grid grid-cols-12 gap-6 animate-fade-in">
+            {/* Center column - Portals & Gate Queues */}
+            <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
+              {/* Portals & Gate Queues */}
+              <div id="gates-card" className="glass-panel rounded-xl flex flex-col bg-white overflow-hidden shadow-sm">
+                <div className="p-4 border-b border-outline-variant/30 flex justify-between items-center bg-surface-container-low/50">
+                  <span className="font-mono text-xs uppercase text-on-surface font-bold">Portals &amp; Gate Queues</span>
+                  <span className="px-2 py-0.5 bg-surface-container-highest rounded text-[10px] font-mono text-on-surface-variant font-semibold">~10M WAIT</span>
+                </div>
+                <div className="p-4 space-y-4">
+                  {state?.gates.map((gate) => {
+                    const isSelected = selectedAssetId === gate.id;
+                    const borderLeftColor = 
+                      gate.status === "OPEN" ? "border-l-status-go" :
+                      gate.status === "CONGESTED" ? "border-l-status-alert" : "border-l-status-critical";
+                    
+                    const waitTextColor = 
+                      gate.status === "OPEN" ? "text-status-go" :
+                      gate.status === "CONGESTED" ? "text-status-alert" : "text-status-critical";
+
+                    return (
+                      <div
+                        key={gate.id}
+                        onClick={() => selectAssetOnMap(gate.id, gate.name, 'gate', `Throughput is currently ${gate.throughputRate} fans/minute with ${gate.assignedVolunteers} active lane monitors.`)}
+                        className={`p-3 bg-surface-container-low border rounded-lg border-l-4 cursor-pointer transition-all ${borderLeftColor} ${
+                          isSelected ? "border-primary shadow-md bg-white" : "border-outline-variant/50 hover:bg-surface-container-low/80"
+                        }`}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-mono text-xs text-on-surface font-bold">{gate.name}</h4>
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
+                            gate.status === "OPEN" ? "bg-status-go/10 text-status-go" :
+                            gate.status === "CONGESTED" ? "bg-status-alert/10 text-status-alert" : "bg-status-critical/10 text-status-critical"
+                          }`}>
+                            {gate.status}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-xs font-mono">
+                          <div>
+                            <p className="text-[9px] text-outline uppercase">Queue</p>
+                            <p className="font-bold text-on-surface">{gate.queueCount.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] text-outline uppercase">Wait</p>
+                            <p className={`font-bold ${waitTextColor}`}>{gate.avgWaitTime}m</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] text-outline uppercase">Flow</p>
+                            <p className="text-on-surface">{gate.throughputRate}/m</p>
+                          </div>
+                        </div>
+                        <div className="mt-2 pt-1 border-t border-outline-variant/30 flex items-center justify-between text-[9px] text-outline">
+                          <span>👤 {gate.assignedVolunteers} stewards</span>
+                          {gate.accessibilityFriendly && <span className="text-status-go">♿ Step-Free</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* AI Dispatch side-panel */}
+            <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+              {renderAICore()}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "logistics" && (
+          <div className="grid grid-cols-12 gap-6 animate-fade-in">
+            {/* Arena Fill Rate and Parking/Transit */}
+            <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+              {state && (
+                <div className="glass-panel rounded-xl p-5 relative overflow-hidden bg-white shadow-sm">
+                  <div className="absolute top-2 right-2">
+                    <div className="w-2.5 h-2.5 rounded-full bg-status-go status-glow-go"></div>
+                  </div>
+                  <div className="flex justify-between items-end mb-3">
+                    <span className="font-mono text-xs uppercase text-outline">Arena Fill Rate</span>
+                    <span className="font-display font-bold text-lg text-status-go">
+                      {Math.round((state.stadium.currentAttendance / state.stadium.capacity) * 100)}%
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-status-go transition-all duration-1000"
+                      style={{ width: `${(state.stadium.currentAttendance / state.stadium.capacity) * 100}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between mt-3 text-xs">
+                    <div className="flex flex-col">
+                      <span className="font-mono text-[9px] text-outline">Attendance</span>
+                      <span className="font-mono text-on-surface font-bold">
+                        {state.stadium.currentAttendance.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="font-mono text-[9px] text-outline">Capacity</span>
+                      <span className="font-mono text-on-surface">
+                        {state.stadium.capacity.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
+              <div id="transit-card" className="glass-panel rounded-xl flex flex-col bg-white overflow-hidden shadow-sm">
+                <div className="p-4 border-b border-outline-variant/30 bg-surface-container-low/50">
+                  <span className="font-mono text-xs uppercase text-on-surface font-bold">Parking &amp; Transit Load</span>
+                </div>
+                
+                <div className="p-4 space-y-3">
+                  {state?.transit.map((hub) => {
+                    const isSelected = selectedAssetId === hub.id;
+                    const barColor = 
+                      hub.status === "FLUID" ? "bg-status-go" :
+                      hub.status === "MODERATE" ? "bg-status-alert" : "bg-status-critical";
+                    
+                    const percentage = hub.currentLoad;
+
+                    return (
+                      <div
+                        key={hub.id}
+                        onClick={() => selectAssetOnMap(hub.id, hub.name, 'transit', `Transit vehicle frequency has been set to high flow with dynamic metering rules applied.`)}
+                        className={`flex items-center gap-3 p-2 cursor-pointer rounded-lg border transition-all ${
+                          isSelected ? "border-primary bg-white shadow-sm" : "border-transparent hover:bg-surface-container"
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-outline">
+                          {hub.type === "TRAIN" ? "train" :
+                           hub.type === "SHUTTLE" ? "airport_shuttle" :
+                           hub.type === "RIDESHARE" ? "hail" : "local_parking"}
+                        </span>
+                        <div className="flex-grow min-w-0">
+                          <p className="font-mono text-[10px] text-on-surface font-medium truncate">{hub.name}</p>
+                          <div className="w-full h-1 bg-surface-container-highest rounded-full mt-1 overflow-hidden">
+                            <div className={`h-full ${barColor}`} style={{ width: `${percentage}%` }}></div>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          {hub.availableSpaces !== undefined ? (
+                            <span className="font-mono text-xs text-status-go font-bold">{hub.availableSpaces} left</span>
+                          ) : (
+                            <span className={`font-mono text-xs font-bold ${
+                              hub.status === "FLUID" ? "text-status-go" :
+                              hub.status === "MODERATE" ? "text-status-alert" : "text-status-critical"
+                            }`}>{percentage}%</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "incidents" && (
+          <div className="grid grid-cols-12 gap-6 animate-fade-in">
+            {/* Left side - Incidents Response */}
+            <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
+              <div id="incidents-card" className="glass-panel rounded-xl flex flex-col bg-white overflow-hidden border border-outline-variant/30 shadow-sm">
+                <div className="p-4 bg-surface-container-high/60 flex justify-between items-center">
+                  <span className="font-mono text-xs text-on-surface uppercase font-bold">Incident Response</span>
+                  <span className="bg-status-critical px-2 py-0.5 rounded text-[9px] font-bold text-white">
+                    {state?.incidents.filter(i => !i.resolved).length || 0} ACTIVE
+                  </span>
+                </div>
+                
+                <div className="p-4 space-y-3">
+                  {state?.incidents.length === 0 ? (
+                    <p className="text-xs text-outline text-center py-4">No active incidents.</p>
+                  ) : (
+                    state?.incidents.map((inc) => (
+                      <div
+                        key={inc.id}
+                        className={`p-3 rounded-lg border transition-all ${
+                          inc.resolved ? "bg-slate-50 border-outline-variant/20 opacity-60" :
+                          inc.severity === "CRITICAL" ? "bg-status-critical/5 border-status-critical/20" : "bg-status-alert/5 border-status-alert/20"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`material-symbols-outlined text-[16px] ${
+                            inc.severity === "CRITICAL" ? "text-status-critical" : "text-status-alert"
+                          }`}>
+                            {inc.severity === "CRITICAL" ? "groups" : "router"}
+                          </span>
+                          <span className="font-mono text-xs text-on-surface font-bold truncate">{inc.location}</span>
+                        </div>
+                        <p className="text-[10px] text-on-surface-variant mb-2">{inc.description}</p>
                         {!inc.resolved && (
                           <button
                             onClick={() => handleResolveIncident(inc.id, inc.location)}
-                            className="bg-emerald-900/80 hover:bg-emerald-800 text-emerald-300 border border-emerald-700/50 px-2 py-0.5 rounded transition-colors cursor-pointer font-sans"
+                            className="text-[9px] font-bold text-primary uppercase border-b border-primary hover:border-b-2 transition-all"
                           >
                             Resolve Issue
                           </button>
                         )}
                       </div>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
+                </div>
+
+                {/* Quick Trigger Simulated Anomaly Form */}
+                <div className="border-t border-outline-variant/30 p-3 bg-surface-container-low/30">
+                  {!showIncidentForm ? (
+                    <button
+                      onClick={() => setShowIncidentForm(true)}
+                      className="w-full bg-slate-100 hover:bg-slate-200 border border-outline-variant/50 text-on-surface-variant text-xs py-1.5 rounded-lg transition-colors font-medium flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-sm">add_circle</span> Inject Simulated Incident
+                    </button>
+                  ) : (
+                    <form onSubmit={handleCreateIncident} className="space-y-2 text-xs flex flex-col">
+                      <div className="flex justify-between items-center pb-1 border-b border-outline-variant/20">
+                        <span className="font-bold text-on-surface uppercase tracking-wide">INJECT ANOMALY</span>
+                        <button
+                          type="button"
+                          onClick={() => setShowIncidentForm(false)}
+                          className="text-outline hover:text-primary font-mono text-[9px]"
+                        >
+                          [CANCEL]
+                        </button>
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Location: e.g. Gate A ticket booths"
+                          value={incidentForm.location}
+                          onChange={(e) => setIncidentForm(prev => ({ ...prev, location: e.target.value }))}
+                          className="w-full bg-white border border-outline-variant/60 rounded px-2 py-1 text-on-surface focus:outline-none focus:border-primary"
+                          required
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <select
+                          value={incidentForm.severity}
+                          onChange={(e) => setIncidentForm(prev => ({ ...prev, severity: e.target.value as any }))}
+                          className="flex-1 bg-white border border-outline-variant/60 rounded px-1 py-1 text-on-surface focus:outline-none"
+                        >
+                          <option value="INFO">INFO</option>
+                          <option value="WARNING">WARNING</option>
+                          <option value="CRITICAL">CRITICAL</option>
+                        </select>
+                        <button
+                          type="submit"
+                          className="bg-primary hover:brightness-110 text-white font-bold py-1 px-3 rounded cursor-pointer"
+                        >
+                          Trigger
+                        </button>
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Impact description..."
+                          value={incidentForm.description}
+                          onChange={(e) => setIncidentForm(prev => ({ ...prev, description: e.target.value }))}
+                          className="w-full bg-white border border-outline-variant/60 rounded px-2 py-1 text-on-surface focus:outline-none focus:border-primary"
+                          required
+                        />
+                      </div>
+                    </form>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Quick Trigger Form Toggle */}
-            <div className="border-t border-slate-700/60 pt-3">
-              {!showIncidentForm ? (
-                <button
-                  onClick={() => setShowIncidentForm(true)}
-                  className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-700/60 text-slate-300 text-xs py-2 rounded-lg transition-colors font-medium flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Inject Simulated Incident
-                </button>
-              ) : (
-                <form onSubmit={handleCreateIncident} className="bg-[#090d18] border border-slate-700/60 p-3 rounded-lg text-xs flex flex-col gap-2.5 animate-fade-in">
-                  <div className="flex justify-between items-center pb-1 border-b border-slate-850">
-                    <span className="font-semibold text-white uppercase tracking-wider">INJECT SIMULATED ANOMALY</span>
-                    <button
-                      type="button"
-                      onClick={() => setShowIncidentForm(false)}
-                      className="text-slate-400 hover:text-white font-mono text-[10px]"
-                    >
-                      [CANCEL]
-                    </button>
-                  </div>
-
-                  <div>
-                    <label className="text-slate-400 block mb-1">Incident Area Location:</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Gate A ticket booths, Lot F corridor"
-                      value={incidentForm.location}
-                      onChange={(e) => setIncidentForm(prev => ({ ...prev, location: e.target.value }))}
-                      className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-slate-400 block mb-1 font-mono">Severity Level:</label>
-                      <select
-                        value={incidentForm.severity}
-                        onChange={(e) => setIncidentForm(prev => ({ ...prev, severity: e.target.value as any }))}
-                        className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-white focus:outline-none focus:border-blue-500"
-                      >
-                        <option value="INFO">INFO (Normal Surge)</option>
-                        <option value="WARNING">WARNING (Scanner Halt)</option>
-                        <option value="CRITICAL">CRITICAL (Platform Block)</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="text-slate-400 block mb-1">Simulate Anomaly:</label>
-                      <button
-                        type="submit"
-                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-1 px-2 rounded cursor-pointer h-[26px] mt-[1px] transition-all"
-                      >
-                        Trigger Hotspot
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-slate-400 block mb-1">Impact description:</label>
-                    <input
-                      type="text"
-                      placeholder="Scanner failure or pedestrian congestion reasons"
-                      value={incidentForm.description}
-                      onChange={(e) => setIncidentForm(prev => ({ ...prev, description: e.target.value }))}
-                      className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                </form>
-              )}
+            {/* AI Dispatch side-panel */}
+            <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+              {renderAICore()}
             </div>
-
           </div>
+        )}
 
-        </section>
+        {activeTab === "broadcast" && (
+          <div className="grid grid-cols-12 gap-6 animate-fade-in">
+            {/* Left side - Dynamic Overhead Broadcasts */}
+            <div className="col-span-12 lg:col-span-6 flex flex-col gap-6">
+              <div id="broadcasts-card" className="glass-panel rounded-xl p-4 bg-white border border-outline-variant/30 shadow-sm">
+                <h4 className="font-mono text-xs text-on-surface uppercase mb-3 flex items-center gap-2 font-bold">
+                  <span className="material-symbols-outlined text-primary text-base">broadcast_on_home</span>
+                  Overhead Broadcasts
+                </h4>
+                
+                <div className="space-y-3 text-xs">
+                  <div className="flex gap-2">
+                    <select
+                      value={broadcastForm.location}
+                      onChange={(e) => setBroadcastForm(p => ({ ...p, location: e.target.value }))}
+                      className="flex-1 bg-surface-container-low border border-outline-variant/50 rounded p-1 text-on-surface"
+                    >
+                      <option value="Gate C Plaza Entrance">Gate C Main Gate</option>
+                      <option value="North Rail Ingress stairs">North Rail Station</option>
+                      <option value="East Parking Lot F/G Corridor">East Shuttle Hub</option>
+                      <option value="South Overflow Parking Lot H">South Parking H</option>
+                    </select>
+                    <select
+                      value={broadcastForm.urgency}
+                      onChange={(e) => setBroadcastForm(p => ({ ...p, urgency: e.target.value }))}
+                      className="bg-surface-container-low border border-outline-variant/50 rounded p-1 text-on-surface font-mono"
+                    >
+                      <option value="NORMAL">NORMAL</option>
+                      <option value="HIGH">HIGH</option>
+                      <option value="CRITICAL">CRITICAL</option>
+                    </select>
+                  </div>
+                  <input
+                    type="text"
+                    value={broadcastForm.description}
+                    onChange={(e) => setBroadcastForm(p => ({ ...p, description: e.target.value }))}
+                    placeholder="Ticket scanner slows down..."
+                    className="w-full bg-surface-container-low border border-outline-variant/50 rounded p-1.5 text-on-surface"
+                  />
+                  <button
+                    onClick={handleDraftAnnouncement}
+                    disabled={draftingAnnouncement}
+                    className="w-full py-2 bg-primary/10 border border-primary/20 text-primary rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-primary/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <span className="material-symbols-outlined text-sm">smart_toy</span>
+                    {draftingAnnouncement ? "Drafting..." : "Draft with Gemini"}
+                  </button>
 
-        {/* RIGHT COLUMN (Lg: 3/12): AI OPERATIONS DECISION PANEL & MULTILINGUAL ASSISTANT */}
-        <section className="lg:col-span-3 flex flex-col gap-4 font-sans" id="ai-operations-column">
-          
-          {/* GEMINI AI OPTIMIZATION PANEL */}
-          <div className="bg-[#111827]/80 backdrop-blur-md border border-slate-700/60 rounded-xl p-4 shadow-xl relative overflow-hidden" id="ai-decision-card">
-            
-            {/* Ambient visual badge */}
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-blue-600/10 to-transparent pointer-events-none" />
-
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-display font-semibold text-sm text-white tracking-wide uppercase flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-blue-400 animate-pulse" />
-                GEMINI AI DISPATCH CORE
-              </h3>
-              <span className="bg-blue-950 text-blue-400 border border-blue-900/40 text-[9px] font-mono font-bold tracking-wider px-1.5 py-0.5 rounded">
-                Grounded Model
-              </span>
+                  {announcementDraft && (
+                    <div className="bg-slate-50 border border-outline-variant/40 p-2.5 rounded-lg text-[10px] animate-fade-in space-y-2 mt-2">
+                      <div className="flex justify-between items-center pb-1 border-b border-outline-variant/20">
+                        <span className="font-bold text-primary uppercase">DRAFT NOTICE</span>
+                        <span className="text-[8px] text-outline">{announcementDraft.languages.join(", ")}</span>
+                      </div>
+                      <strong className="text-on-surface block">[{announcementDraft.title}]</strong>
+                      <p className="text-on-surface-variant leading-relaxed max-h-[80px] overflow-y-auto">{announcementDraft.content}</p>
+                      <div className="flex justify-end gap-1.5 pt-1">
+                        <button onClick={() => setAnnouncementDraft(null)} className="text-outline hover:text-on-surface text-[9px]">Discard</button>
+                        <button onClick={handlePublishAnnouncement} className="bg-primary text-white px-2 py-0.5 rounded text-[9px] font-bold cursor-pointer">Publish</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <p className="text-xs text-slate-400 font-sans leading-relaxed mb-3">
-              Evaluate real-time gate processing capacities and traffic delay parameters. Generates custom operations plans.
-            </p>
+            {/* Right side - Active Digital Boards stream */}
+            <div className="col-span-12 lg:col-span-6 flex flex-col gap-6">
+              <div className="glass-panel rounded-xl p-4 bg-white border border-outline-variant/30 shadow-sm">
+                <h4 className="font-mono text-xs text-on-surface uppercase mb-3 flex items-center gap-2 font-bold">
+                  <span className="material-symbols-outlined text-primary text-base">rss_feed</span>
+                  Active Digital Announcements Board
+                </h4>
+                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                  {activeAnnouncements.length === 0 ? (
+                    <p className="text-xs text-outline text-center py-8">No broadcasts active on stadium boards.</p>
+                  ) : (
+                    activeAnnouncements.map((ann) => (
+                      <div key={ann.id} className="p-3 border border-outline-variant/30 rounded-lg bg-slate-50 font-mono text-xs flex justify-between items-start gap-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                            <span className="font-bold text-on-surface">[{ann.title}]</span>
+                            <span className="text-[8px] bg-outline-variant/20 text-outline px-1 rounded uppercase font-bold">{ann.targetAudience}</span>
+                          </div>
+                          <p className="text-on-surface-variant text-[11px] leading-relaxed">{ann.content}</p>
+                        </div>
+                        <button
+                          onClick={() => handleClearAnnouncement(ann.id, ann.title)}
+                          className="text-[9px] font-bold text-status-critical border border-status-critical/30 hover:bg-status-critical/10 px-2 py-1 rounded transition-colors"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
-            <button
-              onClick={handleTriggerAIOptimize}
-              disabled={loadingAI}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold py-2 px-3 rounded-lg flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 transition-all cursor-pointer"
+      </main>
+
+      {/* FLOATING CHAT ASSISTANT WIDGET */}
+      <div className="fixed bottom-12 right-8 w-80 glass-panel rounded-2xl shadow-2xl border-primary/10 flex flex-col overflow-hidden z-50 bg-white/95 transition-all">
+        <div className="p-3 bg-primary flex justify-between items-center text-white">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+              <span className="material-symbols-outlined text-primary text-[18px]">robot_2</span>
+            </div>
+            <div>
+              <p className="font-mono text-[10px] font-bold leading-none">FIFA VOLUNT-AI</p>
+              <p className="text-[8px] text-white/80 mt-0.5">Tactical Guide Assistant</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={userLanguage}
+              onChange={(e) => setUserLanguage(e.target.value)}
+              className="bg-primary/20 text-white rounded text-[9px] border border-white/20 focus:outline-none py-0.5 px-1 font-mono cursor-pointer"
             >
-              {loadingAI ? (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Analyzing Stadium Telemetry...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-3.5 h-3.5" /> OPTIMIZE TRAFFIC & GATES
-                </>
-              )}
+              <option value="English" className="text-on-surface">EN</option>
+              <option value="Spanish" className="text-on-surface">ES</option>
+              <option value="Portuguese" className="text-on-surface">PT</option>
+              <option value="French" className="text-on-surface">FR</option>
+            </select>
+            <button
+              onClick={() => setShowAssistant(!showAssistant)}
+              className="text-white/80 hover:text-white transition-colors"
+            >
+              <span className="material-symbols-outlined text-base">{showAssistant ? "expand_more" : "expand_less"}</span>
             </button>
+          </div>
+        </div>
 
-            {/* AI Recommendations Stream */}
-            <div className="mt-4 pt-3 border-t border-slate-700/60 flex flex-col gap-2.5 max-h-[220px] overflow-y-auto pr-1">
-              {state?.optimizations.slice(0, 3).map((opt) => (
+        {showAssistant && (
+          <>
+            <div className="p-4 h-64 overflow-y-auto space-y-3 text-[11px] bg-slate-50/50">
+              {chatHistory.map((msg) => (
                 <div
-                  key={opt.id}
-                  className={`p-2.5 rounded-lg text-xs flex flex-col gap-1.5 border transition-all ${
-                    opt.applied
-                      ? "bg-slate-900/60 border-slate-800 opacity-80"
-                      : opt.urgency === "CRITICAL"
-                        ? "bg-red-950/20 border-red-900/40"
-                        : "bg-slate-800/40 border-slate-700/40 hover:border-slate-600 hover:bg-slate-800/60"
+                  key={msg.id}
+                  className={`flex flex-col gap-1 max-w-[85%] rounded-xl p-2.5 shadow-sm border ${
+                    msg.sender === "user"
+                      ? "bg-primary/5 border-primary/20 text-on-surface self-end ml-auto"
+                      : msg.sender === "system"
+                        ? "bg-slate-100 border-outline-variant/20 text-outline text-[9px] self-center w-full text-center"
+                        : "bg-white border-outline-variant/30 text-on-surface self-start mr-auto"
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-1">
-                    <span className="font-semibold text-white block">
-                      ⚡ {opt.title}
-                    </span>
-                    <span className={`text-[8px] font-mono font-bold uppercase px-1 rounded ${
-                      opt.urgency === "CRITICAL" ? "bg-red-900 text-red-100 border border-red-700/30" : "bg-blue-900 text-blue-100 border border-blue-700/30"
-                    }`}>
-                      {opt.urgency}
-                    </span>
-                  </div>
-
-                  <p className="text-[11px] text-slate-400 font-sans mt-0.5">
-                    {opt.description}
-                  </p>
-
-                  <div className="text-[10px] font-mono text-slate-400 bg-slate-950/40 p-1.5 rounded border border-slate-700/50 mt-1">
-                    <span className="text-emerald-400 font-bold block">🎯 Expected Impact:</span>
-                    {opt.estimatedImpact}
-                  </div>
-
-                  <div className="text-[9px] font-mono text-slate-500 italic mt-0.5 leading-relaxed">
-                    <strong>AI Justification:</strong> {opt.aiJustification}
-                  </div>
-
-                  <div className="flex items-center justify-between text-[9px] font-mono text-slate-500 pt-1.5 border-t border-slate-700/60 mt-1">
-                    <span>Target: {opt.type.replace("_", " ")}</span>
-                    {opt.applied ? (
-                      <span className="text-emerald-400 font-bold flex items-center gap-0.5">
-                        <Check className="w-3.5 h-3.5" /> Applied {opt.appliedAt}
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => handleApplyOptimization(opt.id, opt.title)}
-                        className="bg-blue-900/80 hover:bg-blue-800 text-blue-200 border border-blue-700/50 px-2.5 py-0.5 rounded transition-all cursor-pointer font-sans text-[10px]"
-                      >
-                        Deploy Action
-                      </button>
-                    )}
-                  </div>
+                  <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                  
+                  {msg.suggestedRoute && (
+                    <div className="mt-2 pt-1.5 border-t border-outline-variant/30 text-[9px] space-y-1">
+                      <span className="text-primary font-bold block">🚗 Recommended Route ({msg.suggestedRoute.mode}):</span>
+                      <div className="flex flex-wrap items-center gap-1">
+                        {msg.suggestedRoute.path.map((wp, wIdx) => (
+                          <span key={wIdx} className="flex items-center gap-1 font-mono">
+                            {wIdx > 0 && <span className="text-outline text-[8px]">»</span>}
+                            <span className="bg-slate-100 border border-outline-variant/30 text-on-surface-variant px-1 rounded">
+                              {wp}
+                            </span>
+                          </span>
+                        ))}
+                      </div>
+                      <div className="text-[8px] text-outline mt-1 font-mono">
+                        Wait/Transit: <strong className="text-on-surface">{msg.suggestedRoute.travelTime}m</strong>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
+              {loadingGuidance && (
+                <div className="text-outline animate-pulse flex items-center gap-1 text-[10px] self-start p-1.5">
+                  <span className="material-symbols-outlined text-sm animate-spin">sync</span> Grounding route data...
+                </div>
+              )}
+              <div ref={chatEndRef} />
             </div>
-          </div>
 
-          {/* DYNAMIC PA/SCREEN BROADCAST WRITER */}
-          <div className="bg-[#111827]/80 backdrop-blur-md border border-slate-700/60 rounded-xl p-4 shadow-xl">
-            <h3 className="font-display font-semibold text-sm text-white mb-2 tracking-wide uppercase flex items-center gap-1.5">
-              <Volume2 className="w-4 h-4 text-emerald-400" />
-              DYNAMIC OVERHEAD BROADCASTS
-            </h3>
-            <p className="text-[11px] text-slate-400 font-sans mb-3">
-              Draft official multi-lingual announcements automatically based on stadium incidents.
-            </p>
-
-            <div className="flex flex-col gap-2.5 text-xs">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-[10px] text-slate-500 font-mono block mb-1">Incident Area:</label>
-                  <select
-                    value={broadcastForm.location}
-                    onChange={(e) => setBroadcastForm(p => ({ ...p, location: e.target.value }))}
-                    className="w-full bg-slate-950 border border-slate-700 rounded p-1 text-white focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="Gate C Plaza Entrance">Gate C Main Gate</option>
-                    <option value="North Rail Ingress stairs">North Rail Station</option>
-                    <option value="East Parking Lot F/G Corridor">East Shuttle Hub</option>
-                    <option value="South Overflow Parking Lot H">South Parking H</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] text-slate-500 font-mono block mb-1 font-mono">Urgency Priority:</label>
-                  <select
-                    value={broadcastForm.urgency}
-                    onChange={(e) => setBroadcastForm(p => ({ ...p, urgency: e.target.value }))}
-                    className="w-full bg-slate-950 border border-slate-700 rounded p-1 text-white focus:outline-none focus:border-blue-500 font-mono"
-                  >
-                    <option value="NORMAL">NORMAL</option>
-                    <option value="HIGH">HIGH SEVERE</option>
-                    <option value="CRITICAL">CRITICAL URGENT</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] text-slate-500 font-mono block mb-1">Context reason / details:</label>
-                <input
-                  type="text"
-                  value={broadcastForm.description}
-                  onChange={(e) => setBroadcastForm(p => ({ ...p, description: e.target.value }))}
-                  placeholder="Ticket scanner slows down..."
-                  className="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white focus:outline-none focus:border-blue-500"
-                />
-              </div>
-
+            <div className="p-2 border-t border-outline-variant/20 bg-slate-50 flex flex-wrap gap-1">
               <button
-                onClick={handleDraftAnnouncement}
-                disabled={draftingAnnouncement}
-                className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white text-xs font-medium py-1.5 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer"
+                onClick={() => handleSendChatMessage("How do I bypass the massive Gate C crowd delay?")}
+                className="bg-white hover:bg-slate-50 border border-outline-variant/50 rounded-lg py-0.5 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px]"
               >
-                {draftingAnnouncement ? (
-                  <>
-                    <RefreshCw className="w-3 h-3 animate-spin" /> Drafting Translations...
-                  </>
-                ) : (
-                  <>
-                    <Languages className="w-3.5 h-3.5 text-emerald-400" /> Draft Notice with Gemini
-                  </>
-                )}
+                Bypass Gate C Wait
               </button>
-
-              {/* Proposed Announcement Draft Display */}
-              {announcementDraft && (
-                <div className="bg-slate-950 border border-emerald-900/60 p-2.5 rounded-lg text-[11px] animate-fade-in">
-                  <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-slate-800">
-                    <span className="font-bold text-emerald-400 uppercase tracking-wide">
-                      🎯 GEMINI TRANSLATED DRAFT:
-                    </span>
-                    <span className="text-[9px] text-slate-500 font-mono">
-                      {announcementDraft.languages.join(", ")}
-                    </span>
-                  </div>
-                  <strong className="text-white block mb-1 font-mono text-[11px]">
-                    [{announcementDraft.title}]
-                  </strong>
-                  <p className="text-slate-300 font-mono text-[10px] leading-relaxed mb-2 bg-[#090d18] p-1.5 rounded border border-slate-850 max-h-[100px] overflow-y-auto">
-                    {announcementDraft.content}
-                  </p>
-                  <div className="flex justify-end gap-1.5">
-                    <button
-                      onClick={() => setAnnouncementDraft(null)}
-                      className="text-slate-400 hover:text-white px-2 py-0.5 text-[10px]"
-                    >
-                      Discard
-                    </button>
-                    <button
-                      onClick={handlePublishAnnouncement}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 text-[10px] font-bold rounded shadow transition-all cursor-pointer"
-                    >
-                      Publish Alert
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Published List / Deletion */}
-              {activeAnnouncements.length > 0 && (
-                <div className="mt-1 pt-2 border-t border-slate-700/60">
-                  <span className="text-[9px] text-slate-500 font-mono uppercase block mb-1">
-                    Live Broadcast boards queue:
-                  </span>
-                  <div className="flex flex-col gap-1.5 max-h-[100px] overflow-y-auto">
-                    {activeAnnouncements.map(ann => (
-                      <div key={ann.id} className="bg-[#090d18] border border-slate-800 p-1.5 rounded flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <span className={`text-[8px] font-bold block ${ann.broadcastActive ? "text-red-400" : "text-gray-500"}`}>
-                            {ann.broadcastActive ? "● ACTIVE BROADCAST" : "○ SILENCED"}
-                          </span>
-                          <span className="font-semibold text-white block text-[10px] truncate">
-                            {ann.title}
-                          </span>
-                        </div>
-                        {ann.broadcastActive && (
-                          <button
-                            onClick={() => handleClearAnnouncement(ann.id, ann.title)}
-                            className="text-red-400 hover:text-red-300 font-mono text-[10px]"
-                            title="Turn off display board notice"
-                          >
-                            Mute
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* FIFA VOLUNT-AI GUIDANCE ASSISTANT */}
-          <div className="bg-[#111827]/80 backdrop-blur-md border border-slate-700/60 rounded-xl p-4 shadow-xl flex-1 flex flex-col justify-between max-h-[460px]" id="fan-assistance-card">
-            
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-display font-semibold text-sm text-white tracking-wide uppercase flex items-center gap-1.5">
-                  <Compass className="w-4 h-4 text-emerald-400" />
-                  FIFA VOLUNT-AI HELPER
-                </h3>
-                <div className="flex items-center gap-1 text-[10px] font-mono text-slate-400">
-                  <Languages className="w-3.5 h-3.5 text-blue-400" />
-                  <select
-                    value={userLanguage}
-                    onChange={(e) => {
-                      setUserLanguage(e.target.value);
-                      addLog(`Assistant output language updated to: ${e.target.value}`);
-                    }}
-                    className="bg-slate-950 text-white rounded px-1.5 py-0.5 border border-slate-700 focus:outline-none font-mono"
-                  >
-                    <option value="English">English</option>
-                    <option value="Spanish">Español</option>
-                    <option value="Portuguese">Português</option>
-                    <option value="French">Français</option>
-                  </select>
-                </div>
-              </div>
-
-              <p className="text-[11px] text-slate-400 leading-relaxed mb-2 font-sans">
-                Simulates dynamic, crowd-aware fan directions or staff help grounded in real-time sensor metrics.
-              </p>
-
-              {/* Chat Thread */}
-              <div className="bg-slate-950/60 border border-slate-700/50 rounded-lg p-2.5 h-[160px] overflow-y-auto flex flex-col gap-2 font-mono text-[11px]">
-                {chatHistory.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex flex-col gap-1 max-w-[90%] rounded-lg p-2 ${
-                      msg.sender === "user"
-                        ? "bg-blue-600/20 border border-blue-600/40 text-blue-200 self-end"
-                        : msg.sender === "system"
-                          ? "bg-slate-900 border border-slate-800 text-slate-400 text-[10px]"
-                          : "bg-slate-900/95 border border-slate-800 text-slate-200 self-start"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2 text-[9px] text-slate-500 font-sans pb-0.5 border-b border-slate-800/50">
-                      <span className="font-bold uppercase tracking-wider">
-                        {msg.sender === "user" ? "FAN / VOLUNTEER" : msg.sender === "system" ? "STADIUM SYS" : "AI VOLUNT-AI"}
-                      </span>
-                      <span>{msg.timestamp}</span>
-                    </div>
-
-                    <p className="leading-relaxed whitespace-pre-wrap mt-0.5">{msg.text}</p>
-
-                    {/* Grounded Route waypoints if present */}
-                    {msg.suggestedRoute && (
-                      <div className="mt-2 pt-2 border-t border-slate-700/60 text-[10px]">
-                        <span className="text-emerald-400 font-sans font-bold flex items-center gap-1">
-                          🚗 Dynamic Optimization Path ({msg.suggestedRoute.mode}):
-                        </span>
-                        <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                          {msg.suggestedRoute.path.map((wp, wIdx) => (
-                            <span key={wIdx} className="flex items-center gap-1">
-                              {wIdx > 0 && <ChevronRight className="w-3 h-3 text-slate-600" />}
-                              <span className="bg-slate-950 border border-slate-700 text-slate-300 py-0.5 px-1.5 rounded-md font-sans font-medium text-[9px]">
-                                {wp}
-                              </span>
-                            </span>
-                          ))}
-                        </div>
-                        <div className="flex items-center justify-between text-slate-500 mt-1.5 text-[9px]">
-                          <span>Wait + Transit Time: <strong className="text-white">{msg.suggestedRoute.travelTime} mins</strong></span>
-                          {msg.suggestedRoute.congestedAreas.length > 0 && (
-                            <span className="text-red-400">Bottlenecks avoided: {msg.suggestedRoute.congestedAreas.join(", ")}</span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {loadingGuidance && (
-                  <div className="text-slate-500 animate-pulse flex items-center gap-1 self-start p-1.5 font-sans">
-                    <RefreshCw className="w-3 h-3 animate-spin" /> Grounding AI response with live sensor values...
-                  </div>
-                )}
-                <div ref={chatEndRef} />
-              </div>
+              <button
+                onClick={() => handleSendChatMessage("I am at South Overflow Parking. How do I get inside?")}
+                className="bg-white hover:bg-slate-50 border border-outline-variant/50 rounded-lg py-0.5 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px]"
+              >
+                Route from Lot H
+              </button>
             </div>
 
-            {/* Quick Actions Shortcuts */}
-            <div className="mt-3">
-              <span className="text-[9px] text-slate-500 uppercase tracking-wider block mb-1 font-mono">
-                Ask Volunt-AI (Tap shortcut):
-              </span>
-              <div className="flex flex-wrap gap-1 mb-2">
-                <button
-                  onClick={() => handleSendChatMessage("How do I bypass the massive Gate C crowd delay?")}
-                  className="bg-slate-900 hover:bg-slate-800 border border-slate-700/60 rounded py-0.5 px-2 text-[10px] text-slate-300 text-left truncate max-w-[190px] cursor-pointer font-sans"
-                >
-                  🚪 Bypass Gate C queue delay
-                </button>
-                <button
-                  onClick={() => handleSendChatMessage("I am at South Overflow Parking. How do I get inside?")}
-                  className="bg-slate-900 hover:bg-slate-800 border border-slate-700/60 rounded py-0.5 px-2 text-[10px] text-slate-300 text-left truncate max-w-[190px] cursor-pointer font-sans"
-                >
-                  🚌 Route from Parking H
-                </button>
-                <button
-                  onClick={() => handleSendChatMessage("Is there step-free access for wheelchair users?")}
-                  className="bg-slate-900 hover:bg-slate-800 border border-slate-700/60 rounded py-0.5 px-2 text-[10px] text-slate-300 text-left truncate max-w-[190px] cursor-pointer font-sans"
-                >
-                  ♿ Wheelchair & Accessibility Access
-                </button>
-              </div>
-
-              {/* Chat Input */}
-              <div className="flex gap-2">
+            <div className="p-3 border-t border-outline-variant/20 bg-white">
+              <div className="relative flex items-center">
                 <input
                   type="text"
                   placeholder="Ask for custom route advice..."
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSendChatMessage(currentMessage)}
-                  className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 border border-outline-variant/30 rounded-xl py-1.5 pl-3 pr-8 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
                 />
                 <button
                   onClick={() => handleSendChatMessage(currentMessage)}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-lg transition-colors cursor-pointer"
+                  className="absolute right-2 text-primary hover:scale-115 transition-transform cursor-pointer flex items-center justify-center"
                 >
-                  <Send className="w-3.5 h-3.5" />
+                  <span className="material-symbols-outlined text-[18px]">send</span>
                 </button>
               </div>
             </div>
+          </>
+        )}
+      </div>
 
-          </div>
-
-        </section>
-
-      </main>
-
-      {/* OPERATIONS INCIDENT LOG CONSOLE FOOTER */}
-      <footer className="bg-slate-950/40 border-t border-slate-800/80 p-5 mt-8 text-xs font-mono shrink-0" id="main-footer">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex-1 w-full min-w-0">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-slate-400 uppercase tracking-wider text-[10px] font-bold flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                📶 REAL-TIME TELEMETRY LOGS (STAFF SECURE NET)
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-900 border border-slate-800 text-emerald-400">5G NETWORK: OPTIMAL</span>
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-900 border border-slate-800 text-blue-400">SHUTTLE SYSTEMS: ON TIME</span>
-              </div>
-            </div>
-            <div className="bg-slate-950/80 border border-slate-800/80 p-3 rounded-lg text-[10px] text-slate-400 h-20 overflow-y-auto leading-relaxed scrollbar-thin">
-              {operationLogs.map((log, i) => (
-                <div key={i} className="truncate">
-                  <span className="text-blue-500 mr-2 font-bold">»</span>
-                  {log}
-                </div>
+      {/* Footer: Persistent Telemetry Logs */}
+      <footer className="fixed bottom-0 left-0 right-0 h-10 z-50 bg-white/90 backdrop-blur-md border-t border-outline-variant/30 flex items-center justify-between px-8 shadow-inner" id="main-footer">
+        <div className="flex items-center gap-4">
+          <span className="font-mono text-[10px] text-on-surface uppercase tracking-widest flex items-center gap-1.5 font-bold shrink-0">
+            <span className="w-2 h-2 rounded-full bg-status-go animate-pulse"></span>
+            TELEMETRY LIVE
+          </span>
+          <div className="overflow-hidden whitespace-nowrap w-[400px] md:w-[700px] text-outline text-[10px] font-medium font-mono">
+            <div className="inline-block animate-marquee whitespace-nowrap">
+              {operationLogs.map((log, idx) => (
+                <span key={idx} className="mr-8">» {log}</span>
               ))}
             </div>
           </div>
-          <div className="text-right text-[10px] text-slate-500 shrink-0 self-end font-sans">
-            CrowdIQ • FIFA World Cup 2026 Host Stadium Command Center • GenAI Secured Proxy API
-          </div>
+        </div>
+        <div className="flex items-center gap-6 text-[10px] text-outline shrink-0 font-mono">
+          <span>© 2026 CrowdIQ • Tactical White Command</span>
         </div>
       </footer>
 

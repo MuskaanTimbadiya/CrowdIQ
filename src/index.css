@@ -5,27 +5,83 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-display: "Space Grotesk", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+
+  /* Tactical White Color Palette */
+  --color-primary: #004ced;
+  --color-secondary: #059669;
+  --color-background: #ffffff;
+  --color-on-background: #131b2e;
+  --color-surface: #ffffff;
+  --color-surface-dim: #f8f9ff;
+  --color-surface-container: #f1f3ff;
+  --color-surface-container-low: #f8faff;
+  --color-surface-container-high: #e2e7ff;
+  --color-surface-container-highest: #eaedff;
+  --color-on-surface: #131b2e;
+  --color-on-surface-variant: #434656;
+  --color-outline: #737688;
+  --color-outline-variant: #c3c5d9;
+  --color-status-go: #059669;
+  --color-status-alert: #d97706;
+  --color-status-critical: #dc2626;
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
 }
 
 body {
-  background-color: #0b0f19;
-  color: #f3f4f6;
+  background-color: #f8f9ff;
+  color: #131b2e;
   font-family: var(--font-sans);
+  overflow-x: hidden;
 }
 
-/* Custom scrollbars for a cleaner dark UI */
+/* Glass panel style from Stitch */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+}
+
+/* Status glows from Stitch */
+.status-glow-go { box-shadow: 0 0 8px rgba(5, 150, 105, 0.3); }
+.status-glow-alert { box-shadow: 0 0 8px rgba(217, 119, 6, 0.3); }
+.status-glow-critical { box-shadow: 0 0 8px rgba(220, 38, 38, 0.3); }
+
+/* Custom light-mode scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0d1222;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: rgba(0, 0, 0, 0.2);
 }
 
+/* Live Broadcast Scrolling Ticker Animation */
+@keyframes marquee {
+  0% { transform: translateX(10%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  display: inline-flex;
+  animation: marquee 25s linear infinite;
+}
+
+/* Smooth Fade-in & Slide-up Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

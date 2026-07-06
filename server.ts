@@ -336,6 +336,21 @@ const updateWaitTimesAndQueues = () => {
   state.lastUpdated = new Date().toISOString();
 };
 
+// Helper to clean markdown block formatting and parse JSON safely
+const parseGeminiJson = (rawText: string | undefined | null, fallback: any = {}) => {
+  if (!rawText) return fallback;
+  let cleanText = rawText.trim();
+  if (cleanText.startsWith("```")) {
+    cleanText = cleanText.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim();
+  }
+  try {
+    return JSON.parse(cleanText);
+  } catch (err) {
+    console.error("Failed to parse JSON from Gemini text:", cleanText, err);
+    return fallback;
+  }
+};
+
 // API Endpoints
 
 // 1. Get Simulation State
@@ -613,7 +628,7 @@ app.post("/api/ai/optimize", async (req, res) => {
     `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -635,8 +650,7 @@ app.post("/api/ai/optimize", async (req, res) => {
       }
     });
 
-    const text = response.text || "[]";
-    const parsed = JSON.parse(text);
+    const parsed = parseGeminiJson(response.text, []);
     
     const formatted = parsed.map((item: any, idx: number) => ({
       id: `opt_ai_${Date.now()}_${idx}`,
@@ -731,7 +745,7 @@ app.post("/api/ai/guidance", async (req, res) => {
     `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -756,7 +770,7 @@ app.post("/api/ai/guidance", async (req, res) => {
       }
     });
 
-    const parsed = JSON.parse(response.text || "{}");
+    const parsed = parseGeminiJson(response.text, {});
     const formattedReply = {
       id: `msg_${Date.now()}`,
       sender: "ai" as const,
@@ -812,7 +826,7 @@ app.post("/api/ai/broadcast-draft", async (req, res) => {
     `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -829,7 +843,7 @@ app.post("/api/ai/broadcast-draft", async (req, res) => {
       }
     });
 
-    const parsed = JSON.parse(response.text || "{}");
+    const parsed = parseGeminiJson(response.text, {});
     const draft: Announcement = {
       id: `ann_draft_${Date.now()}`,
       title: parsed.title || `Advisory: ${incidentLocation}`,
@@ -899,6 +913,10 @@ const startServer = async () => {
   });
 };
 
-startServer().catch((err) => {
-  console.error("Server Start Failed:", err);
-});
+if (!process.env.VERCEL) {
+  startServer().catch((err) => {
+    console.error("Server Start Failed:", err);
+  });
+}
+
+export default app;
