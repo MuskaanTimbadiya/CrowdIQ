@@ -1,0 +1,6 @@
+{
+  "name": "FIFA World Cup 2026 Stadium Traffic & Fan Guidance AI",
+  "description": "A GenAI-powered dashboard and real-time simulator for optimization of traffic, gates, and transit queues, plus dynamic multilingual fan routing for World Cup 2026 stadiums.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
