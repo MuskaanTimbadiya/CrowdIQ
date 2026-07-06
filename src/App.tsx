@@ -411,11 +411,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-dim text-on-surface flex flex-col font-sans selection:bg-primary selection:text-on-primary" id="main-application-container">
+    <div className="min-h-screen bg-surface-dim text-on-surface flex flex-col font-sans selection:bg-primary selection:text-on-primary pt-20" id="main-application-container">
       
       {/* GLOBAL ACTIVE EMERGENCY SCROLLING TICKER */}
       {activeAnnouncements.some(a => a.broadcastActive) && (
-        <div className="bg-red-50 border-b border-red-200 py-1.5 px-4 overflow-hidden relative flex items-center z-30 shadow-sm mt-20">
+        <div className="bg-red-50 border-b border-red-200 py-1.5 px-4 overflow-hidden relative flex items-center z-30 shadow-sm">
           <div className="bg-red-600 text-white text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded flex items-center gap-1 shrink-0 animate-pulse font-mono">
             <span className="material-symbols-outlined text-[13px]">volume_up</span> LIVE BROADCAST TICKER
           </div>
@@ -431,7 +431,7 @@ export default function App() {
       )}
 
       {/* TOP NAVIGATION HEADER */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center w-full px-8 h-20 bg-surface/90 backdrop-blur-xl border-b border-outline-variant/30 shadow-sm" id="main-header">
+      <header className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center w-full px-8 h-20 bg-surface border-b border-outline-variant/30 shadow-sm" id="main-header">
         <div className="flex items-center gap-6">
           <span className="font-display font-bold text-2xl text-primary tracking-tighter">CrowdIQ</span>
           <div className="h-8 w-[1px] bg-outline-variant hidden md:block"></div>
@@ -576,7 +576,7 @@ export default function App() {
       </aside>
 
       {/* MAIN LAYOUT CONTAINER */}
-      <main className="flex-1 ml-20 mt-20 p-6 md:p-8 pb-16 max-w-[1800px] w-full mx-auto" id="dashboard-grid-container">
+      <main className="flex-1 ml-20 p-6 md:p-8 pb-16 max-w-[1800px] w-full mx-auto" id="dashboard-grid-container">
         
         {activeTab === "perimeter" && (
           <div className="grid grid-cols-12 gap-6 animate-fade-in">
