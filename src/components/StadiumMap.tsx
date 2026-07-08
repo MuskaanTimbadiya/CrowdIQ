@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { GateStatus, TransitHub, RoadStatus, CrowdIncident, FoodStall } from "../types";
+import { GateStatus, TransitHub, RoadStatus, CrowdIncident, FoodStall, Washroom } from "../types";
 
 interface StadiumMapProps {
   gates: GateStatus[];
@@ -13,6 +13,8 @@ interface StadiumMapProps {
   evacuationModeActive?: boolean;
   foodStalls?: FoodStall[];
   selectedFoodStallRoute?: { gateId: string; stallId: string } | null;
+  washrooms?: Washroom[];
+  selectedWashroomRoute?: { gateId: string; washroomId: string } | null;
 }
 
 export const StadiumMap: React.FC<StadiumMapProps> = ({
@@ -24,7 +26,9 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
   onSelectAsset,
   evacuationModeActive = false,
   foodStalls = [],
-  selectedFoodStallRoute = null
+  selectedFoodStallRoute = null,
+  washrooms = [],
+  selectedWashroomRoute = null
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -103,7 +107,11 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
     stall_1: new THREE.Vector3(8, 2.5, -8),
     stall_2: new THREE.Vector3(-8, 2.5, 8),
     stall_3: new THREE.Vector3(8, 2.5, 8),
-    stall_4: new THREE.Vector3(-8, 2.5, -8)
+    stall_4: new THREE.Vector3(-8, 2.5, -8),
+    wc_1: new THREE.Vector3(16, 2.5, -16),
+    wc_2: new THREE.Vector3(16, 2.5, 16),
+    wc_3: new THREE.Vector3(-16, 2.5, 16),
+    wc_4: new THREE.Vector3(-16, 2.5, -16)
   };
 
   useEffect(() => {
@@ -625,6 +633,73 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
       foodParticlesList.push(pMesh);
     }
 
+    // --- WASHROOMS INITIALIZATION ---
+    const wcPositions: Record<string, THREE.Vector3> = {
+      wc_1: new THREE.Vector3(16, 0.6, -16), // NE
+      wc_2: new THREE.Vector3(16, 0.6, 16),  // SE
+      wc_3: new THREE.Vector3(-16, 0.6, 16), // SW
+      wc_4: new THREE.Vector3(-16, 0.6, -16) // NW
+    };
+
+    const wcMeshes: THREE.Mesh[] = [];
+
+    Object.entries(wcPositions).forEach(([wcId, pos], idx) => {
+      const wGeo = new THREE.CylinderGeometry(0.7, 0.7, 1.2, 8);
+      const wMat = new THREE.MeshStandardMaterial({
+        color: 0x8b5cf6, // Purple Restrooms
+        roughness: 0.3,
+        metalness: 0.1,
+        emissive: 0x6d28d9,
+        emissiveIntensity: 0.3
+      });
+      const wMesh = new THREE.Mesh(wGeo, wMat);
+      wMesh.position.copy(pos);
+      wMesh.userData = {
+        id: wcId,
+        name: wcId === "wc_1" ? "Restroom Hub NE" :
+              wcId === "wc_2" ? "Restroom Hub SE" :
+              wcId === "wc_3" ? "Restroom Hub SW" : "Restroom Hub NW",
+        type: "transit",
+        details: `Restroom hub ${idx + 1} located in the concourse ring. Accessible friendly: ${wcId === "wc_1" || wcId === "wc_3" ? 'YES' : 'NO'}`
+      };
+      scene.add(wMesh);
+      interactableObjects.push(wMesh);
+      meshesMap.set(wcId, wMesh);
+      wcMeshes.push(wMesh);
+      geometriesToDispose.push(wGeo);
+      materialsToDispose.push(wMat);
+    });
+
+    // --- WASHROOM ROUTE DYNAMIC PATH INITIALIZATION ---
+    const wcRouteGeo = new THREE.BufferGeometry();
+    const wcRouteMat = new THREE.LineDashedMaterial({
+      color: 0x8b5cf6,
+      dashSize: 1.5,
+      gapSize: 1.5,
+      transparent: true,
+      opacity: 0.8
+    });
+    const wcRouteLine = new THREE.Line(wcRouteGeo, wcRouteMat);
+    wcRouteLine.visible = false;
+    scene.add(wcRouteLine);
+    geometriesToDispose.push(wcRouteGeo);
+    materialsToDispose.push(wcRouteMat);
+
+    const wcParticlesList: THREE.Mesh[] = [];
+    const wcParticleGeo = new THREE.SphereGeometry(0.35, 8, 8);
+    const wcParticleMat = new THREE.MeshBasicMaterial({
+      color: 0x8b5cf6
+    });
+    geometriesToDispose.push(wcParticleGeo);
+    materialsToDispose.push(wcParticleMat);
+
+    for (let i = 0; i < 5; i++) {
+      const pMesh = new THREE.Mesh(wcParticleGeo, wcParticleMat);
+      pMesh.visible = false;
+      scene.add(pMesh);
+      wcParticlesList.push(pMesh);
+    }
+
     // INCIDENTS (Pulsing Cones + rings)
     const incidentGroupsMap = new Map<string, THREE.Group>();
 
@@ -952,6 +1027,36 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
         foodParticlesList.forEach(p => p.visible = false);
       }
 
+      // Animate Restroom Washroom Route
+      if (selectedWashroomRoute) {
+        const startPos = labelPositions[selectedWashroomRoute.gateId];
+        const endPos = labelPositions[selectedWashroomRoute.washroomId];
+        
+        if (startPos && endPos) {
+          const curve = new THREE.LineCurve3(
+            new THREE.Vector3(startPos.x, 0.2, startPos.z),
+            new THREE.Vector3(endPos.x, 0.2, endPos.z)
+          );
+          
+          const points = curve.getPoints(10);
+          wcRouteLine.geometry.setFromPoints(points);
+          wcRouteLine.computeLineDistances();
+          wcRouteLine.visible = true;
+
+          wcParticlesList.forEach((pMesh, idx) => {
+            pMesh.visible = true;
+            const pProgress = ((elapsed * 0.4) + (idx / 5)) % 1.0;
+            curve.getPointAt(pProgress, pMesh.position);
+          });
+        } else {
+          wcRouteLine.visible = false;
+          wcParticlesList.forEach(p => p.visible = false);
+        }
+      } else {
+        wcRouteLine.visible = false;
+        wcParticlesList.forEach(p => p.visible = false);
+      }
+
       // Animate Incidents pulsing scale
       incidents.filter(inc => !inc.resolved).forEach((inc) => {
         const group = meshesMap.get(inc.id);
@@ -1245,6 +1350,48 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
             }`}
           >
             🍺 BAR
+          </div>
+
+          {/* Washroom Labels */}
+          <div
+            ref={(el) => { if (el) labelsRef.current.set("wc_1", el); }}
+            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
+              selectedWashroomRoute?.washroomId === "wc_1"
+                ? "bg-purple-600 border-purple-400 text-white animate-pulse"
+                : "bg-surface-container-low/95 border-purple-500/20 text-purple-500 hover:bg-purple-50/10"
+            }`}
+          >
+            🚻 WC 1
+          </div>
+          <div
+            ref={(el) => { if (el) labelsRef.current.set("wc_2", el); }}
+            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
+              selectedWashroomRoute?.washroomId === "wc_2"
+                ? "bg-purple-600 border-purple-400 text-white animate-pulse"
+                : "bg-surface-container-low/95 border-purple-500/20 text-purple-500 hover:bg-purple-50/10"
+            }`}
+          >
+            🚻 WC 2
+          </div>
+          <div
+            ref={(el) => { if (el) labelsRef.current.set("wc_3", el); }}
+            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
+              selectedWashroomRoute?.washroomId === "wc_3"
+                ? "bg-purple-600 border-purple-400 text-white animate-pulse"
+                : "bg-surface-container-low/95 border-purple-500/20 text-purple-500 hover:bg-purple-50/10"
+            }`}
+          >
+            🚻 WC 3
+          </div>
+          <div
+            ref={(el) => { if (el) labelsRef.current.set("wc_4", el); }}
+            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
+              selectedWashroomRoute?.washroomId === "wc_4"
+                ? "bg-purple-600 border-purple-400 text-white animate-pulse"
+                : "bg-surface-container-low/95 border-purple-500/20 text-purple-500 hover:bg-purple-50/10"
+            }`}
+          >
+            🚻 WC 4
           </div>
 
           {/* Gates Labels */}

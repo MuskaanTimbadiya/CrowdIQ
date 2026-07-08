@@ -64,6 +64,7 @@ export default function App() {
   const [selectedAssetName, setSelectedAssetName] = useState<string>("");
   const [selectedAssetType, setSelectedAssetType] = useState<'gate' | 'transit' | 'road' | 'incident' | ''>("");
   const [selectedFoodStallRoute, setSelectedFoodStallRoute] = useState<{ gateId: string; stallId: string } | null>(null);
+  const [selectedWashroomRoute, setSelectedWashroomRoute] = useState<{ gateId: string; washroomId: string } | null>(null);
   const [selectedAssetDetails, setSelectedAssetDetails] = useState<string>("");
 
   // Assistant states
@@ -448,6 +449,59 @@ export default function App() {
       return;
     }
 
+    if (textLower.includes("washroom") || textLower.includes("restroom") || textLower.includes("toilet") || textLower.includes("wc") || textLower.includes("bathroom")) {
+      setTimeout(() => {
+        let targetWcId = "wc_2";
+        let targetWcName = "Restroom Hub SE";
+        let gateId = "gate_b";
+        let waitText = "1m";
+        let locText = "Concourse Sect 122";
+        let accessibilityText = "Standard Restroom Facilities";
+        
+        if (textLower.includes("north") || textLower.includes("ne") || textLower.includes("wc1") || textLower.includes("accessible")) {
+          targetWcId = "wc_1";
+          targetWcName = "Restroom Hub NE";
+          gateId = "gate_a";
+          waitText = "8m";
+          locText = "Concourse Sect 110";
+          accessibilityText = "Wheelchair Accessible & Standard Facilities";
+        } else if (textLower.includes("southwest") || textLower.includes("sw") || textLower.includes("wc3")) {
+          targetWcId = "wc_3";
+          targetWcName = "Restroom Hub SW";
+          gateId = "gate_c";
+          waitText = "12m";
+          locText = "Concourse Sect 130";
+          accessibilityText = "Wheelchair Accessible & Standard Facilities";
+        } else if (textLower.includes("northwest") || textLower.includes("nw") || textLower.includes("wc4")) {
+          targetWcId = "wc_4";
+          targetWcName = "Restroom Hub NW";
+          gateId = "gate_d";
+          waitText = "3m";
+          locText = "Concourse Sect 145";
+          accessibilityText = "Standard Restroom Facilities";
+        }
+
+        setSelectedWashroomRoute({ gateId, washroomId: targetWcId });
+        setActiveTab("perimeter");
+
+        const aiResponse: ChatMessage = {
+          id: `ai_wc_${Date.now()}`,
+          sender: "ai",
+          text: `🚻 Restroom Navigation Engaged!\n\nI have generated the pedestrian routing path to **${targetWcName}** (${locText}). Current wait time is **${waitText}**. Facilities: *${accessibilityText}*. The walking path is plotted on the 3D map in purple, starting from Gate ${gateId.replace("gate_", "").toUpperCase()}.`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          suggestedRoute: {
+            path: [gateId.replace("gate_", "Gate ").toUpperCase(), targetWcName],
+            travelTime: parseInt(waitText) || 2,
+            mode: "Concourse Walkway",
+            congestedAreas: []
+          }
+        };
+        setChatHistory(prev => [...prev, aiResponse]);
+        setLoadingGuidance(false);
+      }, 800);
+      return;
+    }
+
     try {
       const res = await fetch("/api/ai/guidance", {
         method: "POST",
@@ -811,6 +865,8 @@ export default function App() {
                   evacuationModeActive={state.evacuationModeActive}
                   foodStalls={state.foodStalls}
                   selectedFoodStallRoute={selectedFoodStallRoute}
+                  washrooms={state.washrooms}
+                  selectedWashroomRoute={selectedWashroomRoute}
                 />
               )}
               {/* Access Roadways & Congestion */}
@@ -1023,6 +1079,68 @@ export default function App() {
                               }`}
                             >
                               {isStallRouted ? "Cancel Route" : "Navigate"}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {state?.washrooms && (
+                <div className="glass-panel rounded-xl p-4 bg-surface shadow-sm border border-outline-variant/30 flex flex-col mt-4">
+                  <h4 className="font-mono text-xs text-on-surface uppercase mb-3 flex items-center gap-2 font-bold select-none">
+                    <span className="material-symbols-outlined text-primary text-base">wc</span>
+                    Restroom Facilities
+                  </h4>
+                  <div className="space-y-3.5">
+                    {state.washrooms.map((wc) => {
+                      const isWcRouted = selectedWashroomRoute?.washroomId === wc.id;
+                      const waitColor = 
+                        wc.waitTime < 5 ? "text-status-go" :
+                        wc.waitTime < 10 ? "text-status-alert" : "text-status-critical";
+
+                      return (
+                        <div key={wc.id} className={`p-2.5 border rounded-lg transition-all ${
+                          isWcRouted ? "border-primary bg-primary/5 animate-pulse-glow-primary" : "border-outline-variant/30 bg-surface"
+                        }`}>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className="text-xs font-bold text-on-surface block select-none">🚻 {wc.name}</span>
+                              <span className="text-[9px] font-mono text-outline select-none">{wc.location}</span>
+                            </div>
+                            <div className="text-right">
+                              <span className={`text-xs font-mono font-bold block select-none ${waitColor}`}>{wc.waitTime}m wait</span>
+                              <span className="text-[8px] font-mono text-outline uppercase select-none">{wc.status}</span>
+                            </div>
+                          </div>
+                          <div className="mt-2.5 flex justify-between items-center">
+                            <div className="flex items-center gap-2 select-none">
+                              <span className="text-[8px] font-mono text-outline">Nearest: {wc.nearestGateId.replace("gate_", "Gate ").toUpperCase()}</span>
+                              {wc.accessibilityFriendly && (
+                                <span className="material-symbols-outlined text-xs text-primary" title="Accessibility Friendly">accessible</span>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => {
+                                if (isWcRouted) {
+                                  setSelectedWashroomRoute(null);
+                                } else {
+                                  setSelectedWashroomRoute({
+                                    gateId: wc.nearestGateId,
+                                    washroomId: wc.id
+                                  });
+                                  selectAssetOnMap(wc.id, wc.name, "transit", `${wc.name} is a restroom facility located at ${wc.location}. Current wait time: ${wc.waitTime} minutes. Accessible friendly: ${wc.accessibilityFriendly ? 'YES' : 'NO'}`);
+                                }
+                              }}
+                              className={`text-[9px] font-mono font-bold py-1 px-2.5 rounded cursor-pointer transition-all uppercase tracking-wider ${
+                                isWcRouted 
+                                  ? "bg-primary text-white" 
+                                  : "bg-surface-container hover:bg-primary/10 text-primary border border-primary/20"
+                              }`}
+                            >
+                              {isWcRouted ? "Cancel Route" : "Navigate"}
                             </button>
                           </div>
                         </div>
@@ -1427,6 +1545,12 @@ export default function App() {
                 className="bg-surface hover:bg-slate-50/10 border border-outline-variant/50 rounded-lg py-0.5 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px]"
               >
                 🍔 Food Stall Directions
+              </button>
+              <button
+                onClick={() => handleSendChatMessage("Where is the nearest washroom facility and how do I get there?")}
+                className="bg-surface hover:bg-slate-50/10 border border-outline-variant/50 rounded-lg py-0.5 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px]"
+              >
+                🚻 Washroom Directions
               </button>
             </div>
 

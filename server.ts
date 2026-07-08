@@ -13,7 +13,8 @@ import {
   OptimizationAction,
   Announcement,
   WeatherCondition,
-  FoodStall
+  FoodStall,
+  Washroom
 } from "./src/types";
 
 dotenv.config();
@@ -307,6 +308,47 @@ const defaultFoodStalls = (): FoodStall[] => {
   ];
 };
 
+const defaultWashrooms = (): Washroom[] => {
+  return [
+    {
+      id: "wc_1",
+      name: "Restroom Hub NE",
+      location: "Concourse Sect 110",
+      waitTime: 8,
+      status: "MODERATE",
+      accessibilityFriendly: true,
+      nearestGateId: "gate_a"
+    },
+    {
+      id: "wc_2",
+      name: "Restroom Hub SE",
+      location: "Concourse Sect 122",
+      waitTime: 1,
+      status: "FLUID",
+      accessibilityFriendly: false,
+      nearestGateId: "gate_b"
+    },
+    {
+      id: "wc_3",
+      name: "Restroom Hub SW",
+      location: "Concourse Sect 130",
+      waitTime: 12,
+      status: "HEAVY",
+      accessibilityFriendly: true,
+      nearestGateId: "gate_c"
+    },
+    {
+      id: "wc_4",
+      name: "Restroom Hub NW",
+      location: "Concourse Sect 145",
+      waitTime: 3,
+      status: "FLUID",
+      accessibilityFriendly: false,
+      nearestGateId: "gate_d"
+    }
+  ];
+};
+
 // State Object
 let state: SimulationState = {
   stadium: stadiums.metlife,
@@ -319,7 +361,8 @@ let state: SimulationState = {
   weather: "SUNNY",
   evacuationModeActive: false,
   totalVolunteersPool: 100,
-  foodStalls: defaultFoodStalls()
+  foodStalls: defaultFoodStalls(),
+  washrooms: defaultWashrooms()
 };
 
 // Global active announcements list

@@ -80,6 +80,8 @@ export interface SimulationState {
   totalVolunteersPool: number;
   foodStalls?: FoodStall[];
   selectedFoodStallRoute?: { gateId: string; stallId: string } | null;
+  washrooms?: Washroom[];
+  selectedWashroomRoute?: { gateId: string; washroomId: string } | null;
 }
 
 export interface ChatMessage {
@@ -115,5 +117,15 @@ export interface FoodStall {
   waitTime: number; // in minutes
   status: 'FLUID' | 'MODERATE' | 'HEAVY';
   location: string;
+  nearestGateId: string;
+}
+
+export interface Washroom {
+  id: string;
+  name: string;
+  location: string;
+  waitTime: number; // in minutes
+  status: 'FLUID' | 'MODERATE' | 'HEAVY';
+  accessibilityFriendly: boolean;
   nearestGateId: string;
 }
