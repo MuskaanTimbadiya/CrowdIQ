@@ -63,6 +63,7 @@ export default function App() {
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [selectedAssetName, setSelectedAssetName] = useState<string>("");
   const [selectedAssetType, setSelectedAssetType] = useState<'gate' | 'transit' | 'road' | 'incident' | ''>("");
+  const [selectedFoodStallRoute, setSelectedFoodStallRoute] = useState<{ gateId: string; stallId: string } | null>(null);
   const [selectedAssetDetails, setSelectedAssetDetails] = useState<string>("");
 
   // Assistant states
@@ -397,6 +398,55 @@ export default function App() {
     setChatHistory(prev => [...prev, userMsg]);
     setCurrentMessage("");
     setLoadingGuidance(true);
+
+    const textLower = msgText.toLowerCase();
+    if (textLower.includes("food") || textLower.includes("stall") || textLower.includes("concession") || textLower.includes("taco") || textLower.includes("burger") || textLower.includes("pizza") || textLower.includes("beer")) {
+      setTimeout(() => {
+        let targetStallId = "stall_1";
+        let targetStallName = "Tacos el Chamuco";
+        let gateId = "gate_a";
+        let waitText = "8m";
+        let locText = "Concourse Sect 114";
+        if (textLower.includes("burger")) {
+          targetStallId = "stall_2";
+          targetStallName = "Gridiron Burgers & Fries";
+          gateId = "gate_b";
+          waitText = "18m";
+          locText = "Concourse Sect 101";
+        } else if (textLower.includes("pizza")) {
+          targetStallId = "stall_3";
+          targetStallName = "Azzurri Stone Fire Pizza";
+          gateId = "gate_c";
+          waitText = "12m";
+          locText = "Concourse Sect 128";
+        } else if (textLower.includes("beer") || textLower.includes("drink") || textLower.includes("bar")) {
+          targetStallId = "stall_4";
+          targetStallName = "Half-Time Tavern";
+          gateId = "gate_d";
+          waitText = "4m";
+          locText = "Concourse Sect 142";
+        }
+
+        setSelectedFoodStallRoute({ gateId, stallId: targetStallId });
+        setActiveTab("perimeter");
+
+        const aiResponse: ChatMessage = {
+          id: `ai_food_${Date.now()}`,
+          sender: "ai",
+          text: `🍔 Concession Navigation Engaged!\n\nI have generated the pedestrian routing path to **${targetStallName}** (${locText}). Current wait time at this stand is **${waitText}**. The walking path is plotted on the 3D map in orange, starting from Gate ${gateId.replace("gate_", "").toUpperCase()}.`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          suggestedRoute: {
+            path: [gateId.replace("gate_", "Gate ").toUpperCase(), targetStallName],
+            travelTime: parseInt(waitText) || 5,
+            mode: "Concourse Walkway",
+            congestedAreas: []
+          }
+        };
+        setChatHistory(prev => [...prev, aiResponse]);
+        setLoadingGuidance(false);
+      }, 800);
+      return;
+    }
 
     try {
       const res = await fetch("/api/ai/guidance", {
@@ -758,6 +808,9 @@ export default function App() {
                   incidents={state.incidents}
                   selectedAssetId={selectedAssetId}
                   onSelectAsset={selectAssetOnMap}
+                  evacuationModeActive={state.evacuationModeActive}
+                  foodStalls={state.foodStalls}
+                  selectedFoodStallRoute={selectedFoodStallRoute}
                 />
               )}
               {/* Access Roadways & Congestion */}
@@ -913,6 +966,68 @@ export default function App() {
                         {state.stadium.capacity.toLocaleString()}
                       </span>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {state?.foodStalls && (
+                <div className="glass-panel rounded-xl p-4 bg-surface shadow-sm border border-outline-variant/30 flex flex-col">
+                  <h4 className="font-mono text-xs text-on-surface uppercase mb-3 flex items-center gap-2 font-bold select-none">
+                    <span className="material-symbols-outlined text-primary text-base">restaurant</span>
+                    Concessions &amp; Food Stalls
+                  </h4>
+                  <div className="space-y-3.5">
+                    {state.foodStalls.map((stall) => {
+                      const isStallRouted = selectedFoodStallRoute?.stallId === stall.id;
+                      const waitColor = 
+                        stall.waitTime < 10 ? "text-status-go" :
+                        stall.waitTime < 15 ? "text-status-alert" : "text-status-critical";
+                      
+                      const icon = 
+                        stall.type === "TACOS" ? "🌮" :
+                        stall.type === "BURGERS" ? "🍔" :
+                        stall.type === "PIZZA" ? "🍕" : "🍺";
+
+                      return (
+                        <div key={stall.id} className={`p-2.5 border rounded-lg transition-all ${
+                          isStallRouted ? "border-primary bg-primary/5 animate-pulse-glow-primary" : "border-outline-variant/30 bg-surface"
+                        }`}>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className="text-xs font-bold text-on-surface block select-none">{icon} {stall.name}</span>
+                              <span className="text-[9px] font-mono text-outline select-none">{stall.location}</span>
+                            </div>
+                            <div className="text-right">
+                              <span className={`text-xs font-mono font-bold block select-none ${waitColor}`}>{stall.waitTime}m wait</span>
+                              <span className="text-[8px] font-mono text-outline uppercase select-none">{stall.status}</span>
+                            </div>
+                          </div>
+                          <div className="mt-2.5 flex justify-between items-center">
+                            <span className="text-[8px] font-mono text-outline select-none">Nearest: {stall.nearestGateId.replace("gate_", "Gate ").toUpperCase()}</span>
+                            <button
+                              onClick={() => {
+                                if (isStallRouted) {
+                                  setSelectedFoodStallRoute(null);
+                                } else {
+                                  setSelectedFoodStallRoute({
+                                    gateId: stall.nearestGateId,
+                                    stallId: stall.id
+                                  });
+                                  selectAssetOnMap(stall.id, stall.name, "transit", `${stall.name} is a ${stall.type} concession stand located at ${stall.location}. Wait time: ${stall.waitTime} minutes.`);
+                                }
+                              }}
+                              className={`text-[9px] font-mono font-bold py-1 px-2.5 rounded cursor-pointer transition-all uppercase tracking-wider ${
+                                isStallRouted 
+                                  ? "bg-primary text-white" 
+                                  : "bg-surface-container hover:bg-primary/10 text-primary border border-primary/20"
+                              }`}
+                            >
+                              {isStallRouted ? "Cancel Route" : "Navigate"}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1306,6 +1421,12 @@ export default function App() {
                 className="bg-surface hover:bg-slate-50/10 border border-outline-variant/50 rounded-lg py-0.5 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px]"
               >
                 Route from Lot H
+              </button>
+              <button
+                onClick={() => handleSendChatMessage("Where is the nearest food stall and how do I get there?")}
+                className="bg-surface hover:bg-slate-50/10 border border-outline-variant/50 rounded-lg py-0.5 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px]"
+              >
+                🍔 Food Stall Directions
               </button>
             </div>
 

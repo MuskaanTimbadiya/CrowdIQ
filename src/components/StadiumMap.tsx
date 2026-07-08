@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { GateStatus, TransitHub, RoadStatus, CrowdIncident } from "../types";
+import { GateStatus, TransitHub, RoadStatus, CrowdIncident, FoodStall } from "../types";
 
 interface StadiumMapProps {
   gates: GateStatus[];
@@ -10,6 +10,9 @@ interface StadiumMapProps {
   incidents: CrowdIncident[];
   selectedAssetId: string | null;
   onSelectAsset: (id: string, name: string, type: 'gate' | 'transit' | 'road' | 'incident', details: string) => void;
+  evacuationModeActive?: boolean;
+  foodStalls?: FoodStall[];
+  selectedFoodStallRoute?: { gateId: string; stallId: string } | null;
 }
 
 export const StadiumMap: React.FC<StadiumMapProps> = ({
@@ -18,7 +21,10 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
   roads,
   incidents,
   selectedAssetId,
-  onSelectAsset
+  onSelectAsset,
+  evacuationModeActive = false,
+  foodStalls = [],
+  selectedFoodStallRoute = null
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -89,7 +95,15 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
     gate_a: new THREE.Vector3(0, 4.5, -25),
     gate_b: new THREE.Vector3(34, 4.5, 0),
     gate_c: new THREE.Vector3(0, 4.5, 25),
-    gate_d: new THREE.Vector3(-34, 4.5, 0)
+    gate_d: new THREE.Vector3(-34, 4.5, 0),
+    exit_1: new THREE.Vector3(25.5, 4.5, -25.5),
+    exit_2: new THREE.Vector3(25.5, 4.5, 25.5),
+    exit_3: new THREE.Vector3(-25.5, 4.5, 25.5),
+    exit_4: new THREE.Vector3(-25.5, 4.5, -25.5),
+    stall_1: new THREE.Vector3(8, 2.5, -8),
+    stall_2: new THREE.Vector3(-8, 2.5, 8),
+    stall_3: new THREE.Vector3(8, 2.5, 8),
+    stall_4: new THREE.Vector3(-8, 2.5, -8)
   };
 
   useEffect(() => {
@@ -432,6 +446,185 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
       }
     });
 
+    // --- EMERGENCY EXITS & SAFETY FLOW PATHS ---
+    const exitPositions: Record<string, THREE.Vector3> = {
+      exit_1: new THREE.Vector3(25.5, 2, -25.5), // NE
+      exit_2: new THREE.Vector3(25.5, 2, 25.5),  // SE
+      exit_3: new THREE.Vector3(-25.5, 2, 25.5), // SW
+      exit_4: new THREE.Vector3(-25.5, 2, -25.5) // NW
+    };
+
+    const exitMeshes: THREE.Mesh[] = [];
+    const geometriesToDispose: THREE.BufferGeometry[] = [];
+    const materialsToDispose: THREE.Material[] = [];
+    
+    Object.entries(exitPositions).forEach(([exitId, pos], idx) => {
+      const eGeo = new THREE.CylinderGeometry(1.2, 1.2, 4, 8);
+      const eMat = new THREE.MeshStandardMaterial({
+        color: 0x059669,
+        roughness: 0.4,
+        metalness: 0.1,
+        emissive: 0x047857,
+        emissiveIntensity: 0.3
+      });
+      const eMesh = new THREE.Mesh(eGeo, eMat);
+      eMesh.position.copy(pos);
+      eMesh.userData = {
+        id: exitId,
+        name: `Emergency Exit Gate ${idx + 1}`,
+        type: "transit",
+        details: `Emergency egress portal ${idx + 1} positioned on outer stadium boundary. Configured for high volume outbound foot traffic.`
+      };
+      
+      const bGeo = new THREE.CylinderGeometry(0.08, 0.08, 6, 8, 1, true);
+      const bMat = new THREE.MeshBasicMaterial({
+        color: 0x10b981,
+        transparent: true,
+        opacity: 0.3
+      });
+      const bMesh = new THREE.Mesh(bGeo, bMat);
+      bMesh.position.y = 5;
+      eMesh.add(bMesh);
+      
+      const ballGeo = new THREE.SphereGeometry(0.35, 8, 8);
+      const ballMat = new THREE.MeshBasicMaterial({
+        color: 0x10b981
+      });
+      const ballMesh = new THREE.Mesh(ballGeo, ballMat);
+      ballMesh.position.y = 8;
+      eMesh.add(ballMesh);
+      
+      scene.add(eMesh);
+      interactableObjects.push(eMesh);
+      meshesMap.set(exitId, eMesh);
+      exitMeshes.push(eMesh);
+
+      geometriesToDispose.push(eGeo, bGeo, ballGeo);
+      materialsToDispose.push(eMat, bMat, ballMat);
+    });
+
+    const evacuationCurves: THREE.LineCurve3[] = [
+      new THREE.LineCurve3(new THREE.Vector3(0, 0.2, 0), new THREE.Vector3(0, 0.2, -25)), // Gate A
+      new THREE.LineCurve3(new THREE.Vector3(0, 0.2, 0), new THREE.Vector3(34, 0.2, 0)),  // Gate B
+      new THREE.LineCurve3(new THREE.Vector3(0, 0.2, 0), new THREE.Vector3(0, 0.2, 25)),  // Gate C
+      new THREE.LineCurve3(new THREE.Vector3(0, 0.2, 0), new THREE.Vector3(-34, 0.2, 0)), // Gate D
+      new THREE.LineCurve3(new THREE.Vector3(0, 0.2, 0), new THREE.Vector3(25.5, 0.2, -25.5)), // Exit 1
+      new THREE.LineCurve3(new THREE.Vector3(0, 0.2, 0), new THREE.Vector3(25.5, 0.2, 25.5)),  // Exit 2
+      new THREE.LineCurve3(new THREE.Vector3(0, 0.2, 0), new THREE.Vector3(-25.5, 0.2, 25.5)), // Exit 3
+      new THREE.LineCurve3(new THREE.Vector3(0, 0.2, 0), new THREE.Vector3(-25.5, 0.2, -25.5)) // Exit 4
+    ];
+
+    const flowLines: THREE.Line[] = [];
+    const flowParticles: { mesh: THREE.Mesh; curve: THREE.LineCurve3; progress: number }[] = [];
+    const flowParticleGeo = new THREE.SphereGeometry(0.4, 8, 8);
+    
+    evacuationCurves.forEach((curve) => {
+      const lineGeo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(10));
+      const lineMat = new THREE.LineDashedMaterial({
+        color: 0x10b981,
+        dashSize: 1.5,
+        gapSize: 1.5,
+        transparent: true,
+        opacity: 0.4
+      });
+      const line = new THREE.Line(lineGeo, lineMat);
+      line.computeLineDistances();
+      scene.add(line);
+      flowLines.push(line);
+      
+      for (let i = 0; i < 3; i++) {
+        const pMat = new THREE.MeshBasicMaterial({
+          color: 0x34d399,
+          transparent: true,
+          opacity: 0.8
+        });
+        const pMesh = new THREE.Mesh(flowParticleGeo, pMat);
+        scene.add(pMesh);
+        flowParticles.push({
+          mesh: pMesh,
+          curve,
+          progress: i / 3
+        });
+        materialsToDispose.push(pMat);
+      }
+      geometriesToDispose.push(lineGeo);
+      materialsToDispose.push(lineMat);
+    });
+
+    // --- FOOD CONCESSIONS INITIALIZATION ---
+    const foodPositions: Record<string, THREE.Vector3> = {
+      stall_1: new THREE.Vector3(8, 0.6, -8),
+      stall_2: new THREE.Vector3(-8, 0.6, 8),
+      stall_3: new THREE.Vector3(8, 0.6, 8),
+      stall_4: new THREE.Vector3(-8, 0.6, -8)
+    };
+
+    const foodColors: Record<string, number> = {
+      stall_1: 0xf97316, // Orange Tacos
+      stall_2: 0xeab308, // Yellow Burgers
+      stall_3: 0xef4444, // Red Pizza
+      stall_4: 0x3b82f6  // Blue Bar
+    };
+
+    const foodMeshes: THREE.Mesh[] = [];
+
+    Object.entries(foodPositions).forEach(([stallId, pos]) => {
+      const fGeo = new THREE.CylinderGeometry(0.8, 0.8, 1.2, 8);
+      const fMat = new THREE.MeshStandardMaterial({
+        color: foodColors[stallId],
+        roughness: 0.2,
+        metalness: 0.1,
+        emissive: foodColors[stallId],
+        emissiveIntensity: 0.3
+      });
+      const fMesh = new THREE.Mesh(fGeo, fMat);
+      fMesh.position.copy(pos);
+      fMesh.userData = {
+        id: stallId,
+        name: stallId === "stall_1" ? "Tacos el Chamuco" :
+              stallId === "stall_2" ? "Gridiron Burgers & Fries" :
+              stallId === "stall_3" ? "Azzurri Stone Fire Pizza" : "Half-Time Tavern",
+        type: "transit",
+        details: `${stallId === "stall_1" ? "🌮 Tacos" : stallId === "stall_2" ? "🍔 Burgers" : stallId === "stall_3" ? "🍕 Pizza" : "🍺 Bar"} concession stand located in the main concourse.`
+      };
+      scene.add(fMesh);
+      interactableObjects.push(fMesh);
+      meshesMap.set(stallId, fMesh);
+      foodMeshes.push(fMesh);
+      geometriesToDispose.push(fGeo);
+      materialsToDispose.push(fMat);
+    });
+
+    // --- FOOD ROUTE DYNAMIC PATH INITIALIZATION ---
+    const foodRouteGeo = new THREE.BufferGeometry();
+    const foodRouteMat = new THREE.LineDashedMaterial({
+      color: 0xf97316,
+      dashSize: 1.5,
+      gapSize: 1.5,
+      transparent: true,
+      opacity: 0.8
+    });
+    const foodRouteLine = new THREE.Line(foodRouteGeo, foodRouteMat);
+    foodRouteLine.visible = false;
+    scene.add(foodRouteLine);
+    geometriesToDispose.push(foodRouteGeo);
+    materialsToDispose.push(foodRouteMat);
+
+    const foodParticlesList: THREE.Mesh[] = [];
+    const foodParticleGeo = new THREE.SphereGeometry(0.35, 8, 8);
+    const foodParticleMat = new THREE.MeshBasicMaterial({
+      color: 0xf97316
+    });
+    geometriesToDispose.push(foodParticleGeo);
+    materialsToDispose.push(foodParticleMat);
+
+    for (let i = 0; i < 5; i++) {
+      const pMesh = new THREE.Mesh(foodParticleGeo, foodParticleMat);
+      pMesh.visible = false;
+      scene.add(pMesh);
+      foodParticlesList.push(pMesh);
+    }
+
     // INCIDENTS (Pulsing Cones + rings)
     const incidentGroupsMap = new Map<string, THREE.Group>();
 
@@ -698,6 +891,67 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
         }
       });
 
+      // Animate evacuation flow paths
+      flowLines.forEach(line => {
+        line.visible = evacuationModeActive;
+      });
+      
+      flowParticles.forEach(p => {
+        p.mesh.visible = evacuationModeActive;
+        if (evacuationModeActive) {
+          p.progress = (p.progress + delta * 0.4) % 1.0;
+          p.curve.getPointAt(p.progress, p.mesh.position);
+        }
+      });
+      
+      // Pulsate and color-code exits based on evacuation state
+      exitMeshes.forEach((mesh, idx) => {
+        if (evacuationModeActive) {
+          const scaleVal = 1.0 + Math.abs(Math.sin(elapsed * 6 + idx)) * 0.25;
+          mesh.scale.set(scaleVal, scaleVal, scaleVal);
+          const mat = mesh.material as THREE.MeshStandardMaterial;
+          mat.color.setHex(0x34d399); // Active green
+          mat.emissive.setHex(0x10b981);
+          mat.emissiveIntensity = 0.5 + Math.abs(Math.sin(elapsed * 6 + idx)) * 0.5;
+        } else {
+          mesh.scale.set(1.0, 1.0, 1.0);
+          const mat = mesh.material as THREE.MeshStandardMaterial;
+          mat.color.setHex(0x059669); // Standby green
+          mat.emissive.setHex(0x047857);
+          mat.emissiveIntensity = 0.3;
+        }
+      });
+
+      // Animate Concession Food Route
+      if (selectedFoodStallRoute) {
+        const startPos = labelPositions[selectedFoodStallRoute.gateId];
+        const endPos = labelPositions[selectedFoodStallRoute.stallId];
+        
+        if (startPos && endPos) {
+          const curve = new THREE.LineCurve3(
+            new THREE.Vector3(startPos.x, 0.2, startPos.z),
+            new THREE.Vector3(endPos.x, 0.2, endPos.z)
+          );
+          
+          const points = curve.getPoints(10);
+          foodRouteLine.geometry.setFromPoints(points);
+          foodRouteLine.computeLineDistances();
+          foodRouteLine.visible = true;
+
+          foodParticlesList.forEach((pMesh, idx) => {
+            pMesh.visible = true;
+            const pProgress = ((elapsed * 0.4) + (idx / 5)) % 1.0;
+            curve.getPointAt(pProgress, pMesh.position);
+          });
+        } else {
+          foodRouteLine.visible = false;
+          foodParticlesList.forEach(p => p.visible = false);
+        }
+      } else {
+        foodRouteLine.visible = false;
+        foodParticlesList.forEach(p => p.visible = false);
+      }
+
       // Animate Incidents pulsing scale
       incidents.filter(inc => !inc.resolved).forEach((inc) => {
         const group = meshesMap.get(inc.id);
@@ -784,6 +1038,11 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
       groundMat.dispose();
       radarGeo.dispose();
       radarMat.dispose();
+      
+      // Dispose emergency exit & flow geometries
+      flowParticleGeo.dispose();
+      geometriesToDispose.forEach(g => g.dispose());
+      materialsToDispose.forEach(m => m.dispose());
     };
   }, [gates, transit, roads, incidents]);
 
@@ -903,6 +1162,89 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
             className="absolute bg-surface/90 border border-outline-variant/40 text-on-surface font-sans text-[10px] font-bold px-1.5 py-0.5 rounded-full transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md"
           >
             🚌 SHUTTLE
+          </div>
+
+          {/* Exits Labels */}
+          <div
+            ref={(el) => { if (el) labelsRef.current.set("exit_1", el); }}
+            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
+              evacuationModeActive 
+                ? "bg-emerald-600 border-emerald-400 text-white animate-pulse" 
+                : "bg-surface-container-low/90 border-outline-variant/30 text-outline"
+            }`}
+          >
+            {evacuationModeActive ? "🚨 EXIT 1 (ACTIVE)" : "EXIT 1"}
+          </div>
+          <div
+            ref={(el) => { if (el) labelsRef.current.set("exit_2", el); }}
+            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
+              evacuationModeActive 
+                ? "bg-emerald-600 border-emerald-400 text-white animate-pulse" 
+                : "bg-surface-container-low/90 border-outline-variant/30 text-outline"
+            }`}
+          >
+            {evacuationModeActive ? "🚨 EXIT 2 (ACTIVE)" : "EXIT 2"}
+          </div>
+          <div
+            ref={(el) => { if (el) labelsRef.current.set("exit_3", el); }}
+            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
+              evacuationModeActive 
+                ? "bg-emerald-600 border-emerald-400 text-white animate-pulse" 
+                : "bg-surface-container-low/90 border-outline-variant/30 text-outline"
+            }`}
+          >
+            {evacuationModeActive ? "🚨 EXIT 3 (ACTIVE)" : "EXIT 3"}
+          </div>
+          <div
+            ref={(el) => { if (el) labelsRef.current.set("exit_4", el); }}
+            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
+              evacuationModeActive 
+                ? "bg-emerald-600 border-emerald-400 text-white animate-pulse" 
+                : "bg-surface-container-low/90 border-outline-variant/30 text-outline"
+            }`}
+          >
+            {evacuationModeActive ? "🚨 EXIT 4 (ACTIVE)" : "EXIT 4"}
+          </div>
+          {/* Food Stall Labels */}
+          <div
+            ref={(el) => { if (el) labelsRef.current.set("stall_1", el); }}
+            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
+              selectedFoodStallRoute?.stallId === "stall_1"
+                ? "bg-orange-600 border-orange-400 text-white animate-pulse"
+                : "bg-surface-container-low/95 border-orange-500/20 text-orange-500 hover:bg-orange-50/10"
+            }`}
+          >
+            🌮 TACOS
+          </div>
+          <div
+            ref={(el) => { if (el) labelsRef.current.set("stall_2", el); }}
+            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
+              selectedFoodStallRoute?.stallId === "stall_2"
+                ? "bg-orange-600 border-orange-400 text-white animate-pulse"
+                : "bg-surface-container-low/95 border-yellow-500/20 text-yellow-600 hover:bg-yellow-50/10"
+            }`}
+          >
+            🍔 BURGERS
+          </div>
+          <div
+            ref={(el) => { if (el) labelsRef.current.set("stall_3", el); }}
+            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
+              selectedFoodStallRoute?.stallId === "stall_3"
+                ? "bg-orange-600 border-orange-400 text-white animate-pulse"
+                : "bg-surface-container-low/95 border-red-500/20 text-red-500 hover:bg-red-50/10"
+            }`}
+          >
+            🍕 PIZZA
+          </div>
+          <div
+            ref={(el) => { if (el) labelsRef.current.set("stall_4", el); }}
+            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
+              selectedFoodStallRoute?.stallId === "stall_4"
+                ? "bg-orange-600 border-orange-400 text-white animate-pulse"
+                : "bg-surface-container-low/95 border-blue-500/20 text-blue-500 hover:bg-blue-50/10"
+            }`}
+          >
+            🍺 BAR
           </div>
 
           {/* Gates Labels */}

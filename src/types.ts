@@ -78,6 +78,8 @@ export interface SimulationState {
   weather: WeatherCondition;
   evacuationModeActive: boolean;
   totalVolunteersPool: number;
+  foodStalls?: FoodStall[];
+  selectedFoodStallRoute?: { gateId: string; stallId: string } | null;
 }
 
 export interface ChatMessage {
@@ -104,4 +106,14 @@ export interface Announcement {
   languages: string[]; // e.g. ["English", "Spanish", "Portuguese"]
   broadcastActive: boolean;
   timestamp: string;
+}
+
+export interface FoodStall {
+  id: string;
+  name: string;
+  type: 'TACOS' | 'BURGERS' | 'PIZZA' | 'BAR';
+  waitTime: number; // in minutes
+  status: 'FLUID' | 'MODERATE' | 'HEAVY';
+  location: string;
+  nearestGateId: string;
 }

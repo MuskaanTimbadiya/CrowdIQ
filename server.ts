@@ -12,7 +12,8 @@ import {
   CrowdIncident,
   OptimizationAction,
   Announcement,
-  WeatherCondition
+  WeatherCondition,
+  FoodStall
 } from "./src/types";
 
 dotenv.config();
@@ -265,6 +266,47 @@ const defaultOptimizations = (): OptimizationAction[] => {
   ];
 };
 
+const defaultFoodStalls = (): FoodStall[] => {
+  return [
+    {
+      id: "stall_1",
+      name: "Tacos el Chamuco",
+      type: "TACOS",
+      waitTime: 8,
+      status: "FLUID",
+      location: "Concourse Sect 114",
+      nearestGateId: "gate_a"
+    },
+    {
+      id: "stall_2",
+      name: "Gridiron Burgers & Fries",
+      type: "BURGERS",
+      waitTime: 18,
+      status: "HEAVY",
+      location: "Concourse Sect 101",
+      nearestGateId: "gate_b"
+    },
+    {
+      id: "stall_3",
+      name: "Azzurri Stone Fire Pizza",
+      type: "PIZZA",
+      waitTime: 12,
+      status: "MODERATE",
+      location: "Concourse Sect 128",
+      nearestGateId: "gate_c"
+    },
+    {
+      id: "stall_4",
+      name: "Half-Time Tavern",
+      type: "BAR",
+      waitTime: 4,
+      status: "FLUID",
+      location: "Concourse Sect 142",
+      nearestGateId: "gate_d"
+    }
+  ];
+};
+
 // State Object
 let state: SimulationState = {
   stadium: stadiums.metlife,
@@ -276,7 +318,8 @@ let state: SimulationState = {
   lastUpdated: new Date().toISOString(),
   weather: "SUNNY",
   evacuationModeActive: false,
-  totalVolunteersPool: 100
+  totalVolunteersPool: 100,
+  foodStalls: defaultFoodStalls()
 };
 
 // Global active announcements list
