@@ -2,23 +2,23 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #004ced;
-  --secondary: #059669;
+  --primary: #2563eb;
+  --secondary: #00bd85;
   --background: #ffffff;
-  --on-background: #131b2e;
+  --on-background: #0f131d;
   --surface: #ffffff;
   --surface-dim: #f8f9ff;
   --surface-container: #f1f3ff;
   --surface-container-low: #f8faff;
   --surface-container-high: #e2e7ff;
   --surface-container-highest: #eaedff;
-  --on-surface: #131b2e;
+  --on-surface: #0f131d;
   --on-surface-variant: #434656;
-  --outline: #737688;
+  --outline: #8d90a0;
   --outline-variant: #c3c5d9;
-  --status-go: #059669;
-  --status-alert: #d97706;
-  --status-critical: #dc2626;
+  --status-go: #00bd85;
+  --status-alert: #f59e0b;
+  --status-critical: #ef4444;
 
   --glass-bg: rgba(255, 255, 255, 0.85);
   --glass-border: rgba(0, 0, 0, 0.08);
@@ -26,27 +26,27 @@
 }
 
 .dark {
-  --primary: #588cff;
-  --secondary: #34d399;
+  --primary: #b4c5ff;
+  --secondary: #45dfa4;
   --background: #0f131d;
   --on-background: #dfe2f1;
-  --surface: #131722;
-  --surface-dim: #0a0c10;
-  --surface-container: #1b1f2e;
-  --surface-container-low: #131722;
-  --surface-container-high: #24293c;
-  --surface-container-highest: #2b3149;
+  --surface: #1c1f2a;
+  --surface-dim: #0f131d;
+  --surface-container: #262a35;
+  --surface-container-low: #171b26;
+  --surface-container-high: #313540;
+  --surface-container-highest: #353944;
   --on-surface: #dfe2f1;
-  --on-surface-variant: #a2a6be;
-  --outline: #7c8096;
-  --outline-variant: #34384d;
-  --status-go: #10b981;
+  --on-surface-variant: #c3c6d7;
+  --outline: #8d90a0;
+  --outline-variant: #434655;
+  --status-go: #34d399;
   --status-alert: #f59e0b;
   --status-critical: #ef4444;
 
-  --glass-bg: rgba(19, 23, 34, 0.8);
-  --glass-border: rgba(255, 255, 255, 0.06);
-  --glass-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+  --glass-bg: rgba(28, 31, 42, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.57);
 }
 
 @theme {
