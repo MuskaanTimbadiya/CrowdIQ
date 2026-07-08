@@ -154,6 +154,19 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
 
+    // TACTICAL RADAR SWEEP MESH
+    const radarGeo = new THREE.RingGeometry(0.1, 95, 64, 1, 0, Math.PI / 4); // 45 degree sector
+    radarGeo.rotateX(-Math.PI / 2);
+    const radarMat = new THREE.MeshBasicMaterial({
+      color: 0xb4c5ff,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.08
+    });
+    const radar = new THREE.Mesh(radarGeo, radarMat);
+    radar.position.y = 0.25; // slightly above grid floor
+    scene.add(radar);
+
     // STAR PARTICLES
     const starGeo = new THREE.BufferGeometry();
     const starCount = 200;
@@ -663,12 +676,25 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
         });
       });
 
-      // Rotate Transit wireframe cages
+      // Rotate radar sweep
+      if (radar) {
+        radar.rotation.y = -elapsed * 0.4;
+      }
+
+      // Rotate and Bob Transit wireframe cages
       transit.forEach((hub) => {
         const obj = meshesMap.get(hub.id);
-        if (obj && obj instanceof THREE.Group && obj.children[1]) {
-          obj.children[1].rotation.y += 0.01;
-          obj.children[1].rotation.x += 0.005;
+        if (obj && obj instanceof THREE.Group) {
+          if (obj.children[1]) {
+            obj.children[1].rotation.y += 0.01;
+            obj.children[1].rotation.x += 0.005;
+          }
+          if (!hub.id.startsWith("parking")) {
+            const basePos = transitPositions[hub.id];
+            if (basePos) {
+              obj.position.y = basePos.y + Math.sin(elapsed * 1.6 + (hub.id === "rail_transit" ? 0 : Math.PI)) * 0.8;
+            }
+          }
         }
       });
 
@@ -756,6 +782,8 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
       outerStandMat.dispose();
       groundGeo.dispose();
       groundMat.dispose();
+      radarGeo.dispose();
+      radarMat.dispose();
     };
   }, [gates, transit, roads, incidents]);
 
@@ -767,7 +795,7 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
   }, [selectedAssetId]);
 
   return (
-    <div className="glass-panel rounded-xl p-4 overflow-hidden bg-surface border border-outline-variant/30 flex flex-col" id="stadium-map-card">
+    <div className="glass-panel rounded-xl p-4 overflow-hidden bg-surface border border-outline-variant/30 flex flex-col hologram-scanlines" id="stadium-map-card">
       <div className="flex justify-between items-center mb-4">
         <h2 className="font-display text-[18px] text-on-surface font-bold flex items-center gap-2">
           <span className="material-symbols-outlined text-primary">3d_rotation</span>

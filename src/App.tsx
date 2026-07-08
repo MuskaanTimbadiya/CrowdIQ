@@ -466,7 +466,7 @@ export default function App() {
         <button
           onClick={handleTriggerAIOptimize}
           disabled={loadingAI}
-          className="w-full bg-primary py-2.5 rounded-xl text-white font-bold font-mono text-xs flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/30 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+          className="w-full bg-primary py-2.5 rounded-xl text-white font-bold font-mono text-xs flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/30 transition-all active:scale-95 cursor-pointer disabled:opacity-50 shimmer-btn"
         >
           <span className="material-symbols-outlined text-sm">auto_fix_high</span>
           {loadingAI ? "Analyzing..." : "OPTIMIZE COMMAND"}
@@ -516,7 +516,7 @@ export default function App() {
           </div>
           <button
             onClick={() => handleToggleEvacuation(false)}
-            className="bg-white text-red-600 hover:bg-red-50 text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded cursor-pointer transition-colors shadow"
+            className="bg-white text-red-600 hover:bg-red-50 text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded cursor-pointer transition-colors shadow shimmer-btn"
           >
             Deactivate Drill
           </button>
@@ -554,28 +554,28 @@ export default function App() {
           </nav>
         </div>
 
-        {/* Floating match telemetry pill */}
-        <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-6 glass-panel px-6 py-2 rounded-full border border-primary/10 bg-surface">
-          <div className="flex flex-col items-center">
-            <span className="font-mono text-[9px] text-outline uppercase tracking-widest leading-none">Quarter-Final</span>
-            <span className="font-display font-bold text-xs text-on-surface mt-0.5">ARG <span className="text-primary mx-0.5">vs</span> ENG</span>
-          </div>
-          <div className="h-6 w-[1px] bg-outline-variant"></div>
-          <div className="flex flex-col items-center">
-            <span className="font-mono text-[9px] text-outline uppercase tracking-widest leading-none">Attendance</span>
-            <div className="flex items-baseline gap-0.5 mt-0.5">
-              <span className="font-mono text-xs text-status-go font-bold">{state?.stadium.currentAttendance.toLocaleString()}</span>
-              <span className="font-mono text-[10px] text-outline">/ {state?.stadium.capacity.toLocaleString()}</span>
+        <div className="flex items-center gap-3">
+          {/* Match telemetry pill */}
+          <div className="hidden xl:flex items-center gap-4 glass-panel px-4 py-1.5 rounded-full border border-primary/10 bg-surface mr-2 select-none">
+            <div className="flex flex-col items-center">
+              <span className="font-mono text-[8px] text-outline uppercase tracking-widest leading-none">Quarter-Final</span>
+              <span className="font-display font-bold text-[10px] text-on-surface mt-0.5">ARG <span className="text-primary mx-0.5">vs</span> ENG</span>
+            </div>
+            <div className="h-5 w-[1px] bg-outline-variant"></div>
+            <div className="flex flex-col items-center">
+              <span className="font-mono text-[8px] text-outline uppercase tracking-widest leading-none">Attendance</span>
+              <div className="flex items-baseline gap-0.5 mt-0.5">
+                <span className="font-mono text-[10px] text-status-go font-bold">{state?.stadium.currentAttendance.toLocaleString()}</span>
+                <span className="font-mono text-[8px] text-outline">/ {state?.stadium.capacity.toLocaleString()}</span>
+              </div>
+            </div>
+            <div className="h-5 w-[1px] bg-outline-variant"></div>
+            <div className="flex flex-col items-center">
+              <span className="font-mono text-[8px] text-outline uppercase tracking-widest leading-none">Local Time</span>
+              <span className="font-mono text-[10px] text-primary font-bold mt-0.5">{localTime || "06:37:16 AM"}</span>
             </div>
           </div>
-          <div className="h-6 w-[1px] bg-outline-variant"></div>
-          <div className="flex flex-col items-center">
-            <span className="font-mono text-[9px] text-outline uppercase tracking-widest leading-none">Local Time</span>
-            <span className="font-mono text-xs text-primary font-bold mt-0.5">{localTime || "06:37:16 AM"}</span>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-3">
           <div className="flex flex-wrap items-center gap-2 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
             <span className="text-[9px] text-outline font-mono uppercase tracking-wider font-semibold px-1">Arena:</span>
             <select
@@ -749,7 +749,7 @@ export default function App() {
         {activeTab === "perimeter" && (
           <div className="grid grid-cols-12 gap-6 animate-fade-in">
             {/* Middle Column (Lg: 8): Map & Roads */}
-            <div className="col-span-12 lg:col-span-8 flex flex-col gap-6" id="main-map-column">
+            <div className="col-span-12 lg:col-span-8 flex flex-col gap-6 animate-stagger-1" id="main-map-column">
               {state && (
                 <StadiumMap
                   gates={state.gates}
@@ -778,7 +778,7 @@ export default function App() {
                         key={road.id}
                         onClick={() => selectAssetOnMap(road.id, road.name, 'road', `${road.name} direction delay is ${road.delayMinutes} mins. Contraflow configuration: ${road.laneControlsActive ? 'ACTIVE' : 'OFF'}`)}
                         className={`glass-panel rounded-xl p-4 bg-surface cursor-pointer transition-all border ${
-                          isSelected ? "border-primary shadow-md" : "border-outline-variant/40 hover:bg-slate-50"
+                          isSelected ? "border-primary shadow-md animate-pulse-glow-primary" : "border-outline-variant/40 hover:bg-slate-50"
                         }`}
                       >
                         <div className="flex justify-between items-start mb-3">
@@ -803,7 +803,7 @@ export default function App() {
             </div>
 
             {/* AI Dispatch side-panel */}
-            <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+            <div className="col-span-12 lg:col-span-4 flex flex-col gap-6 animate-stagger-2">
               {renderAICore()}
             </div>
           </div>
@@ -812,7 +812,7 @@ export default function App() {
         {activeTab === "gates" && (
           <div className="grid grid-cols-12 gap-6 animate-fade-in">
             {/* Center column - Portals & Gate Queues */}
-            <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
+            <div className="col-span-12 lg:col-span-8 flex flex-col gap-6 animate-stagger-1">
               {/* Portals & Gate Queues */}
               <div id="gates-card" className="glass-panel rounded-xl flex flex-col bg-surface overflow-hidden shadow-sm">
                 <div className="p-4 border-b border-outline-variant/30 flex justify-between items-center bg-surface-container-low/50">
@@ -835,7 +835,7 @@ export default function App() {
                         key={gate.id}
                         onClick={() => selectAssetOnMap(gate.id, gate.name, 'gate', `Throughput is currently ${gate.throughputRate} fans/minute with ${gate.assignedVolunteers} active lane monitors.`)}
                         className={`p-3 bg-surface-container-low border rounded-lg border-l-4 cursor-pointer transition-all ${borderLeftColor} ${
-                          isSelected ? "border-primary shadow-md bg-surface" : "border-outline-variant/50 hover:bg-surface-container-low/80"
+                          isSelected ? "border-primary shadow-md bg-surface animate-pulse-glow-primary" : "border-outline-variant/50 hover:bg-surface-container-low/80"
                         }`}
                       >
                         <div className="flex justify-between items-start mb-2">
@@ -873,7 +873,7 @@ export default function App() {
             </div>
 
             {/* AI Dispatch side-panel */}
-            <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+            <div className="col-span-12 lg:col-span-4 flex flex-col gap-6 animate-stagger-2">
               {renderAICore()}
             </div>
           </div>
@@ -882,7 +882,7 @@ export default function App() {
         {activeTab === "logistics" && (
           <div className="grid grid-cols-12 gap-6 animate-fade-in">
             {/* Arena Fill Rate and Parking/Transit */}
-            <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+            <div className="col-span-12 lg:col-span-4 flex flex-col gap-6 animate-stagger-1">
               {state && (
                 <div className="glass-panel rounded-xl p-5 relative overflow-hidden bg-surface shadow-sm">
                   <div className="absolute top-2 right-2">
@@ -918,7 +918,7 @@ export default function App() {
               )}
             </div>
 
-            <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
+            <div className="col-span-12 lg:col-span-8 flex flex-col gap-6 animate-stagger-2">
               <div id="transit-card" className="glass-panel rounded-xl flex flex-col bg-surface overflow-hidden shadow-sm">
                 <div className="p-4 border-b border-outline-variant/30 bg-surface-container-low/50">
                   <span className="font-mono text-xs uppercase text-on-surface font-bold">Parking &amp; Transit Load</span>
@@ -938,7 +938,7 @@ export default function App() {
                         key={hub.id}
                         onClick={() => selectAssetOnMap(hub.id, hub.name, 'transit', `Transit vehicle frequency has been set to high flow with dynamic metering rules applied.`)}
                         className={`flex items-center gap-3 p-2 cursor-pointer rounded-lg border transition-all ${
-                          isSelected ? "border-primary bg-surface shadow-sm" : "border-transparent hover:bg-surface-container"
+                          isSelected ? "border-primary bg-surface shadow-sm animate-pulse-glow-primary" : "border-transparent hover:bg-surface-container"
                         }`}
                       >
                         <span className="material-symbols-outlined text-outline">
@@ -974,7 +974,7 @@ export default function App() {
         {activeTab === "incidents" && (
           <div className="grid grid-cols-12 gap-6 animate-fade-in">
             {/* Left side - Incidents Response */}
-            <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
+            <div className="col-span-12 lg:col-span-8 flex flex-col gap-6 animate-stagger-1">
               <div id="incidents-card" className="glass-panel rounded-xl flex flex-col bg-surface overflow-hidden border border-outline-variant/30 shadow-sm">
                 <div className="p-4 bg-surface-container-high/60 flex justify-between items-center">
                   <span className="font-mono text-xs text-on-surface uppercase font-bold">Incident Response</span>
@@ -992,7 +992,7 @@ export default function App() {
                         key={inc.id}
                         className={`p-3 rounded-lg border transition-all ${
                           inc.resolved ? "bg-slate-50 border-outline-variant/20 opacity-60" :
-                          inc.severity === "CRITICAL" ? "bg-status-critical/5 border-status-critical/20" : "bg-status-alert/5 border-status-alert/20"
+                          inc.severity === "CRITICAL" ? "bg-status-critical/5 border-status-critical/20 animate-pulse-glow-critical" : "bg-status-alert/5 border-status-alert/20 animate-pulse-glow-warning"
                         }`}
                       >
                         <div className="flex items-center gap-2 mb-1">
@@ -1073,7 +1073,7 @@ export default function App() {
                         </select>
                         <button
                           type="submit"
-                          className="bg-primary hover:brightness-110 text-white font-bold py-1 px-3 rounded cursor-pointer"
+                          className="bg-primary hover:brightness-110 text-white font-bold py-1 px-3 rounded cursor-pointer shimmer-btn"
                         >
                           Trigger
                         </button>
@@ -1095,7 +1095,7 @@ export default function App() {
             </div>
 
             {/* AI Dispatch side-panel */}
-            <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+            <div className="col-span-12 lg:col-span-4 flex flex-col gap-6 animate-stagger-2">
               {renderAICore()}
             </div>
           </div>
@@ -1104,7 +1104,7 @@ export default function App() {
         {activeTab === "broadcast" && (
           <div className="grid grid-cols-12 gap-6 animate-fade-in">
             {/* Left side - Dynamic Overhead Broadcasts */}
-            <div className="col-span-12 lg:col-span-6 flex flex-col gap-6">
+            <div className="col-span-12 lg:col-span-6 flex flex-col gap-6 animate-stagger-1">
               <div id="broadcasts-card" className="glass-panel rounded-xl p-4 bg-surface border border-outline-variant/30 shadow-sm">
                 <h4 className="font-mono text-xs text-on-surface uppercase mb-3 flex items-center gap-2 font-bold">
                   <span className="material-symbols-outlined text-primary text-base">broadcast_on_home</span>
@@ -1143,7 +1143,7 @@ export default function App() {
                   <button
                     onClick={handleDraftAnnouncement}
                     disabled={draftingAnnouncement}
-                    className="w-full py-2 bg-primary/10 border border-primary/20 text-primary rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-primary/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="w-full py-2 bg-primary/10 border border-primary/20 text-primary rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-primary/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shimmer-btn"
                   >
                     <span className="material-symbols-outlined text-sm">smart_toy</span>
                     {draftingAnnouncement ? "Drafting..." : "Draft with Gemini"}
@@ -1169,7 +1169,7 @@ export default function App() {
             </div>
 
             {/* Right side - Active Digital Boards stream */}
-            <div className="col-span-12 lg:col-span-6 flex flex-col gap-6">
+            <div className="col-span-12 lg:col-span-6 flex flex-col gap-6 animate-stagger-2">
               <div className="glass-panel rounded-xl p-4 bg-surface border border-outline-variant/30 shadow-sm">
                 <h4 className="font-mono text-xs text-on-surface uppercase mb-3 flex items-center gap-2 font-bold">
                   <span className="material-symbols-outlined text-primary text-base">rss_feed</span>
@@ -1253,7 +1253,7 @@ export default function App() {
               {chatHistory.map((msg) => (
                 <div
                   key={msg.id}
-                  className={`flex flex-col gap-1 max-w-[85%] rounded-xl p-2.5 shadow-sm border ${
+                  className={`flex flex-col gap-1 max-w-[85%] rounded-xl p-2.5 shadow-sm border animate-fade-in ${
                     msg.sender === "user"
                       ? "bg-primary/5 border-primary/20 text-on-surface self-end ml-auto"
                       : msg.sender === "system"
@@ -1284,8 +1284,11 @@ export default function App() {
                 </div>
               ))}
               {loadingGuidance && (
-                <div className="text-outline animate-pulse flex items-center gap-1 text-[10px] self-start p-1.5">
-                  <span className="material-symbols-outlined text-sm animate-spin">sync</span> Grounding route data...
+                <div className="bg-surface border border-outline-variant/30 rounded-xl p-2.5 max-w-[80%] self-start mr-auto shadow-sm animate-fade-in flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-primary rounded-full bounce-dot-1"></span>
+                  <span className="w-1.5 h-1.5 bg-primary rounded-full bounce-dot-2"></span>
+                  <span className="w-1.5 h-1.5 bg-primary rounded-full bounce-dot-3"></span>
+                  <span className="text-[9px] font-mono text-outline ml-1.5">Grounding real-time routes...</span>
                 </div>
               )}
               <div ref={chatEndRef} />
