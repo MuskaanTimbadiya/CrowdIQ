@@ -21,7 +21,13 @@ async function runTests() {
         if (!data.state || !data.activeAnnouncements || !data.currentPhase) {
           throw new Error("GET /api/state response format invalid");
         }
-        console.log("✅ Test 1 Passed: GET /api/state is healthy.");
+        if (!data.state.foodStalls || data.state.foodStalls.length !== 4) {
+          throw new Error("GET /api/state missing or invalid foodStalls list");
+        }
+        if (!data.state.washrooms || data.state.washrooms.length !== 4) {
+          throw new Error("GET /api/state missing or invalid washrooms list");
+        }
+        console.log("✅ Test 1 Passed: GET /api/state is healthy and contains food stalls & restrooms.");
       });
 
       // Test 2: POST /api/state/phase
