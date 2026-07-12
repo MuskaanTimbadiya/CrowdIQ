@@ -18,7 +18,6 @@ export default function App() {
   const [currentPhase, setCurrentPhase] = useState<"ingress" | "halftime" | "egress">("ingress");
   const [selectedStadiumId, setSelectedStadiumId] = useState<string>("metlife");
   const [activeTab, setActiveTab] = useState<string>("perimeter");
-  const [showMobileControls, setShowMobileControls] = useState<boolean>(false);
 
   // Theme state & persistence
   const [theme, setTheme] = useState<"light" | "dark">(() => {
@@ -800,11 +799,11 @@ export default function App() {
 
       {/* GLOBAL ACTIVE EMERGENCY SCROLLING TICKER */}
       {activeAnnouncements.some(a => a.broadcastActive) && (
-        <div className="bg-status-critical/10 border-b border-status-critical/20 py-2 px-4 overflow-hidden relative flex items-center z-30 shadow-sm">
+        <div className="bg-surface border-b border-status-critical/30 py-2 px-4 overflow-hidden relative flex items-center z-30 shadow-md">
           <div className="bg-status-critical text-white text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded flex items-center gap-1 shrink-0 animate-pulse font-orbitron">
             <span className="material-symbols-outlined text-[12px]">volume_up</span> BROADCAST TICKER
           </div>
-          <div className="ml-4 flex gap-8 animate-marquee whitespace-nowrap text-xs font-mono font-medium text-status-critical">
+          <div className="ml-4 flex gap-8 animate-marquee whitespace-nowrap text-xs font-mono font-semibold text-status-critical">
             {activeAnnouncements.filter(a => a.broadcastActive).map((ann) => (
               <span key={ann.id} className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 bg-status-critical rounded-full animate-ping" />
@@ -854,60 +853,6 @@ export default function App() {
             </div>
           </div>
 
-          <div className="hidden lg:flex flex-wrap items-center gap-1.5 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
-            <span className="text-[8px] text-outline font-orbitron uppercase tracking-wider font-semibold px-1">Phase:</span>
-            <select
-              value={currentPhase}
-              onChange={(e) => handlePhaseChange(e.target.value as any)}
-              className="bg-surface border border-outline-variant/30 text-[10px] text-on-surface rounded px-1.5 py-0.5 font-mono focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all cursor-pointer font-bold uppercase"
-            >
-              <option value="ingress">Ingress</option>
-              <option value="halftime">Halftime</option>
-              <option value="egress">Egress</option>
-            </select>
-          </div>
-
-          <div className="hidden lg:flex flex-wrap items-center gap-1.5 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
-            <span className="text-[8px] text-outline font-orbitron uppercase tracking-wider font-semibold px-1">Arena:</span>
-            <select
-              value={selectedStadiumId}
-              onChange={(e) => {
-                setSelectedStadiumId(e.target.value);
-                handlePhaseChange(currentPhase, e.target.value);
-              }}
-              className="bg-surface border border-outline-variant/30 text-[10px] text-on-surface rounded px-1.5 py-0.5 font-mono focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all cursor-pointer font-bold"
-            >
-              <option value="metlife">MetLife (NY/NJ)</option>
-              <option value="azteca">Azteca (MX)</option>
-              <option value="sofi">SoFi (LA)</option>
-            </select>
-          </div>
-
-          <div className="hidden lg:flex flex-wrap items-center gap-1.5 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
-            <span className="text-[8px] text-outline font-orbitron uppercase tracking-wider font-semibold px-1">Atmosphere:</span>
-            <select
-              value={state?.weather || "SUNNY"}
-              onChange={(e) => handleUpdateWeather(e.target.value as any)}
-              className="bg-surface border border-outline-variant/30 text-[10px] text-on-surface rounded px-1.5 py-0.5 font-mono focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all cursor-pointer font-bold"
-            >
-              <option value="SUNNY">Sunny</option>
-              <option value="RAINY">Rainy</option>
-              <option value="LIGHTNING_STORM">Storm</option>
-            </select>
-          </div>
-
-          <button
-            onClick={() => setShowMobileControls(!showMobileControls)}
-            className={`lg:hidden w-9 h-9 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
-              showMobileControls 
-                ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" 
-                : "text-on-surface border-outline-variant/30 hover:bg-surface-container-high"
-            }`}
-            title="Toggle Tactical Panel"
-          >
-            <span className="material-symbols-outlined text-lg">tune</span>
-          </button>
-
           <button
             onClick={fetchState}
             className="w-9 h-9 rounded-lg border border-outline-variant/30 flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-all cursor-pointer"
@@ -952,50 +897,59 @@ export default function App() {
           ))}
         </div>
 
-        {/* COLLAPSIBLE MOBILE QUICK CONTROLS (visible below lg) */}
-        {showMobileControls && (
-          <div className="lg:hidden glass-panel rounded-xl p-4 mb-6 bg-surface border border-outline-variant/30 animate-fade-in shadow-md grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[9px] text-outline font-orbitron uppercase tracking-wider font-bold">Phase Selector</span>
+        {/* TACTICAL CONFIGURATION BAR (Phase, Arena, Atmosphere selectors) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6" id="tactical-config-bar">
+          <div className="glass-panel rounded-xl p-3.5 bg-surface border border-outline-variant/30 flex items-center gap-3.5 shadow-sm select-none">
+            <span className="material-symbols-outlined text-primary text-xl">schedule</span>
+            <div className="flex-grow">
+              <p className="text-[8px] text-outline font-orbitron uppercase tracking-wider font-bold">Operation Phase</p>
               <select
                 value={currentPhase}
                 onChange={(e) => handlePhaseChange(e.target.value as any)}
-                className="w-full bg-surface-container border border-outline-variant/40 text-xs text-on-surface rounded p-2 font-mono focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all font-bold uppercase"
+                className="bg-transparent text-xs text-on-surface font-mono font-bold focus:outline-none cursor-pointer mt-0.5 uppercase w-full"
               >
-                <option value="ingress">Ingress</option>
-                <option value="halftime">Halftime</option>
-                <option value="egress">Egress</option>
+                <option value="ingress" className="bg-surface text-on-surface">Ingress</option>
+                <option value="halftime" className="bg-surface text-on-surface">Halftime</option>
+                <option value="egress" className="bg-surface text-on-surface">Egress</option>
               </select>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[9px] text-outline font-orbitron uppercase tracking-wider font-bold">Arena Selector</span>
+          </div>
+          
+          <div className="glass-panel rounded-xl p-3.5 bg-surface border border-outline-variant/30 flex items-center gap-3.5 shadow-sm select-none">
+            <span className="material-symbols-outlined text-primary text-xl">stadium</span>
+            <div className="flex-grow">
+              <p className="text-[8px] text-outline font-orbitron uppercase tracking-wider font-bold">Active Arena</p>
               <select
                 value={selectedStadiumId}
                 onChange={(e) => {
                   setSelectedStadiumId(e.target.value);
                   handlePhaseChange(currentPhase, e.target.value);
                 }}
-                className="w-full bg-surface-container border border-outline-variant/40 text-xs text-on-surface rounded p-2 font-mono focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all font-bold"
+                className="bg-transparent text-xs text-on-surface font-mono font-bold focus:outline-none cursor-pointer mt-0.5 w-full"
               >
-                <option value="metlife">MetLife (NY/NJ)</option>
-                <option value="azteca">Azteca (MX)</option>
-                <option value="sofi">SoFi (LA)</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[9px] text-outline font-orbitron uppercase tracking-wider font-bold">Atmosphere (Weather)</span>
-              <select
-                value={state?.weather || "SUNNY"}
-                onChange={(e) => handleUpdateWeather(e.target.value as any)}
-                className="w-full bg-surface-container border border-outline-variant/40 text-xs text-on-surface rounded p-2 font-mono focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all font-bold"
-              >
-                <option value="SUNNY">Sunny</option>
-                <option value="RAINY">Rainy</option>
-                <option value="LIGHTNING_STORM">Storm</option>
+                <option value="metlife" className="bg-surface text-on-surface">MetLife (NY/NJ)</option>
+                <option value="azteca" className="bg-surface text-on-surface">Azteca (MX)</option>
+                <option value="sofi" className="bg-surface text-on-surface">SoFi (LA)</option>
               </select>
             </div>
           </div>
-        )}
+
+          <div className="glass-panel rounded-xl p-3.5 bg-surface border border-outline-variant/30 flex items-center gap-3.5 shadow-sm select-none">
+            <span className="material-symbols-outlined text-primary text-xl">partly_cloudy_day</span>
+            <div className="flex-grow">
+              <p className="text-[8px] text-outline font-orbitron uppercase tracking-wider font-bold">Atmosphere</p>
+              <select
+                value={state?.weather || "SUNNY"}
+                onChange={(e) => handleUpdateWeather(e.target.value as any)}
+                className="bg-transparent text-xs text-on-surface font-mono font-bold focus:outline-none cursor-pointer mt-0.5 w-full"
+              >
+                <option value="SUNNY" className="bg-surface text-on-surface">Sunny</option>
+                <option value="RAINY" className="bg-surface text-on-surface">Rainy</option>
+                <option value="LIGHTNING_STORM" className="bg-surface text-on-surface">Storm</option>
+              </select>
+            </div>
+          </div>
+        </div>
         
         {/* TIME TRAVEL PROJECTION SLIDER */}
         <div className="glass-panel rounded-xl p-5 mb-6 bg-surface border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-sm">
