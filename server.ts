@@ -1,7 +1,6 @@
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
-import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import {
   SimulationState,
@@ -21,6 +20,15 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
+
+// Support Vercel serverless function routing where the '/api' prefix might be stripped.
+// Prepend '/api' to incoming request paths if they lack it, to ensure route matching.
+app.use((req, res, next) => {
+  if (!req.url.startsWith('/api') && !req.url.includes('.') && req.url !== '/') {
+    req.url = '/api' + req.url;
+  }
+  next();
+});
 
 const PORT = 3000;
 
@@ -848,7 +856,12 @@ app.post("/api/ai/optimize", async (req, res) => {
     res.json({ optimizations: state.optimizations });
   } catch (error: any) {
     console.error("Gemini Optimize Error:", error);
-    res.status(500).json({ error: "Failed to generate AI optimizations", details: error.message });
+    // Graceful fallback when Gemini API fails
+    const fallbackOptimizations = defaultOptimizations().map(o => ({
+      ...o,
+      description: `[Offline Fallback] ${o.description}`
+    }));
+    res.json({ optimizations: fallbackOptimizations });
   }
 });
 
@@ -1085,7 +1098,18 @@ app.post("/api/ai/broadcast-draft", async (req, res) => {
     res.json({ draft });
   } catch (error: any) {
     console.error("Gemini Broadcast Draft Error:", error);
-    res.status(500).json({ error: "Failed to draft announcement with AI", details: error.message });
+    // Graceful fallback when Gemini API fails
+    const draft: Announcement = {
+      id: `ann_draft_${Date.now()}`,
+      title: `Advisory: ${cleanLocation}`,
+      content: `[Offline Fallback] ATTENTION: ${cleanDescription} at ${cleanLocation}. Response teams have been dispatched. Please follow staff directions.`,
+      targetAudience: "ALL_FANS",
+      priority: urgency === "CRITICAL" ? "URGENT" : "HIGH",
+      languages: ["English", "Spanish"],
+      broadcastActive: false,
+      timestamp: new Date().toISOString()
+    };
+    res.json({ draft });
   }
 });
 
@@ -1203,6 +1227,7 @@ app.post("/api/staff/redeploy", (req, res) => {
 // Serve React build in production, otherwise Vite dev middleware in development
 const startServer = async () => {
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",

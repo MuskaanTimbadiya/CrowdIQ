@@ -830,17 +830,22 @@ export default function App() {
             </div>
             <div className="h-5 w-[1px] bg-outline-variant"></div>
             <div className="flex flex-col items-center">
-              <span className="font-mono text-[8px] text-outline uppercase tracking-widest leading-none">Attendance</span>
-              <div className="flex items-baseline gap-0.5 mt-0.5">
-                <span className="font-mono text-[10px] text-status-go font-bold">{state?.stadium.currentAttendance.toLocaleString()}</span>
-                <span className="font-mono text-[8px] text-outline">/ {state?.stadium.capacity.toLocaleString()}</span>
-              </div>
-            </div>
-            <div className="h-5 w-[1px] bg-outline-variant"></div>
-            <div className="flex flex-col items-center">
               <span className="font-mono text-[8px] text-outline uppercase tracking-widest leading-none">Local Time</span>
               <span className="font-mono text-[10px] text-primary font-bold mt-0.5">{localTime || "06:37:16 AM"}</span>
             </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
+            <span className="text-[9px] text-outline font-mono uppercase tracking-wider font-semibold px-1">Phase:</span>
+            <select
+              value={currentPhase}
+              onChange={(e) => handlePhaseChange(e.target.value as any)}
+              className="bg-surface border border-outline-variant/30 text-xs text-on-surface rounded px-1.5 py-0.5 font-sans focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all cursor-pointer"
+            >
+              <option value="ingress" className="bg-surface text-on-surface">Ingress</option>
+              <option value="halftime" className="bg-surface text-on-surface">Halftime</option>
+              <option value="egress" className="bg-surface text-on-surface">Egress</option>
+            </select>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
@@ -871,6 +876,14 @@ export default function App() {
               <option value="LIGHTNING_STORM">⛈️ Storm</option>
             </select>
           </div>
+
+          <button
+            onClick={fetchState}
+            className="w-9 h-9 rounded-xl border border-outline-variant/30 flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-all cursor-pointer"
+            title="Sync State"
+          >
+            <span className="material-symbols-outlined text-lg">refresh</span>
+          </button>
           
           <button
             onClick={() => setTheme(p => p === "light" ? "dark" : "light")}
@@ -888,85 +901,8 @@ export default function App() {
         </div>
       </header>
 
-      {/* Side NavBar */}
-      <aside className="fixed left-0 top-0 h-full flex flex-col z-40 bg-surface border-r border-outline-variant w-20 hover:w-64 transition-all duration-300 group shadow-lg shadow-black/5">
-        <div className="mt-24 px-4 mb-8">
-          <div className="flex items-center gap-4 group-hover:px-2 transition-all">
-            <div className="w-10 h-10 flex items-center justify-center bg-primary/5 rounded-lg shrink-0">
-              <span className="material-symbols-outlined text-primary">analytics</span>
-            </div>
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity overflow-hidden">
-              <p className="font-mono text-xs text-on-surface font-bold truncate">System Intelligence</p>
-              <p className="font-mono text-[9px] text-outline truncate uppercase">FIFA World Cup 2026</p>
-            </div>
-          </div>
-        </div>
-        <nav className="flex flex-col gap-2 flex-grow overflow-y-auto overflow-x-hidden px-2">
-          {/* Command Tab */}
-          <span onClick={() => setActiveTab('perimeter')} className={`rounded-xl p-3 flex items-center gap-4 transition-all cursor-pointer ${activeTab === 'perimeter' ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container'}`}>
-            <span className="material-symbols-outlined shrink-0">dashboard</span>
-            <span className="font-mono text-xs opacity-0 group-hover:opacity-100 transition-opacity">Command</span>
-          </span>
-          {/* Analytics / Gates Tab */}
-          <span onClick={() => setActiveTab('gates')} className={`rounded-xl p-3 flex items-center gap-4 transition-all cursor-pointer group/item ${activeTab === 'gates' ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container'}`}>
-            <span className="material-symbols-outlined shrink-0 group-hover/item:translate-x-1 transition-transform">monitoring</span>
-            <span className="font-mono text-xs opacity-0 group-hover:opacity-100 transition-opacity">Analytics</span>
-          </span>
-          {/* Transit Tab */}
-          <span onClick={() => setActiveTab('logistics')} className={`rounded-xl p-3 flex items-center gap-4 transition-all cursor-pointer group/item ${activeTab === 'logistics' ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container'}`}>
-            <span className="material-symbols-outlined shrink-0 group-hover/item:translate-x-1 transition-transform">directions_bus</span>
-            <span className="font-mono text-xs opacity-0 group-hover:opacity-100 transition-opacity">Transit</span>
-          </span>
-          {/* Security Tab */}
-          <span onClick={() => setActiveTab('incidents')} className={`rounded-xl p-3 flex items-center gap-4 transition-all cursor-pointer group/item ${activeTab === 'incidents' ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container'}`}>
-            <span className="material-symbols-outlined shrink-0 group-hover/item:translate-x-1 transition-transform">security</span>
-            <span className="font-mono text-xs opacity-0 group-hover:opacity-100 transition-opacity">Security</span>
-          </span>
-          {/* Communications Tab */}
-          <span onClick={() => setActiveTab('broadcast')} className={`rounded-xl p-3 flex items-center gap-4 transition-all cursor-pointer group/item ${activeTab === 'broadcast' ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container'}`}>
-            <span className="material-symbols-outlined shrink-0 group-hover/item:translate-x-1 transition-transform">campaign</span>
-            <span className="font-mono text-xs opacity-0 group-hover:opacity-100 transition-opacity">Communications</span>
-          </span>
-        </nav>
-        <div className="p-4 flex flex-col gap-2 mt-auto border-t border-outline-variant/30">
-          <div className="hidden group-hover:flex gap-1.5 mb-2 font-mono text-[9px]">
-            <button
-              onClick={() => handlePhaseChange("ingress")}
-              className={`flex-1 py-1 rounded text-center font-bold border transition-all cursor-pointer ${
-                currentPhase === "ingress" ? "bg-primary text-white border-primary" : "bg-white text-on-surface border-outline-variant/50 hover:bg-slate-50"
-              }`}
-            >
-              Ingress
-            </button>
-            <button
-              onClick={() => handlePhaseChange("halftime")}
-              className={`flex-1 py-1 rounded text-center font-bold border transition-all cursor-pointer ${
-                currentPhase === "halftime" ? "bg-primary text-white border-primary" : "bg-white text-on-surface border-outline-variant/50 hover:bg-slate-50"
-              }`}
-            >
-              Half
-            </button>
-            <button
-              onClick={() => handlePhaseChange("egress")}
-              className={`flex-1 py-1 rounded text-center font-bold border transition-all cursor-pointer ${
-                currentPhase === "egress" ? "bg-primary text-white border-primary" : "bg-white text-on-surface border-outline-variant/50 hover:bg-slate-50"
-              }`}
-            >
-              Egress
-            </button>
-          </div>
-          <button
-            onClick={fetchState}
-            className="p-2 border border-outline-variant/50 rounded-xl text-on-surface-variant hover:text-primary hover:bg-surface-container flex items-center justify-center transition-all cursor-pointer"
-            title="Sync State"
-          >
-            <span className="material-symbols-outlined text-base">refresh</span>
-          </button>
-        </div>
-      </aside>
-
       {/* MAIN LAYOUT CONTAINER */}
-      <main className="flex-1 ml-20 p-6 md:p-8 pb-16 max-w-[1800px] w-full mx-auto" id="dashboard-grid-container">
+      <main className="flex-1 p-6 md:p-8 pb-16 max-w-[1800px] w-full mx-auto" id="dashboard-grid-container">
         
         {/* TIME TRAVEL PROJECTION SLIDER */}
         <div className="glass-panel rounded-xl p-4 mb-6 bg-surface border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
