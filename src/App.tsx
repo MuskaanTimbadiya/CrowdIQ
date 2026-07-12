@@ -18,6 +18,7 @@ export default function App() {
   const [currentPhase, setCurrentPhase] = useState<"ingress" | "halftime" | "egress">("ingress");
   const [selectedStadiumId, setSelectedStadiumId] = useState<string>("metlife");
   const [activeTab, setActiveTab] = useState<string>("perimeter");
+  const [showMobileControls, setShowMobileControls] = useState<boolean>(false);
 
   // Theme state & persistence
   const [theme, setTheme] = useState<"light" | "dark">(() => {
@@ -853,7 +854,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-1.5 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
+          <div className="hidden lg:flex flex-wrap items-center gap-1.5 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
             <span className="text-[8px] text-outline font-orbitron uppercase tracking-wider font-semibold px-1">Phase:</span>
             <select
               value={currentPhase}
@@ -866,7 +867,7 @@ export default function App() {
             </select>
           </div>
 
-          <div className="flex flex-wrap items-center gap-1.5 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
+          <div className="hidden lg:flex flex-wrap items-center gap-1.5 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
             <span className="text-[8px] text-outline font-orbitron uppercase tracking-wider font-semibold px-1">Arena:</span>
             <select
               value={selectedStadiumId}
@@ -882,7 +883,7 @@ export default function App() {
             </select>
           </div>
 
-          <div className="flex flex-wrap items-center gap-1.5 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
+          <div className="hidden lg:flex flex-wrap items-center gap-1.5 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
             <span className="text-[8px] text-outline font-orbitron uppercase tracking-wider font-semibold px-1">Atmosphere:</span>
             <select
               value={state?.weather || "SUNNY"}
@@ -894,6 +895,18 @@ export default function App() {
               <option value="LIGHTNING_STORM">Storm</option>
             </select>
           </div>
+
+          <button
+            onClick={() => setShowMobileControls(!showMobileControls)}
+            className={`lg:hidden w-9 h-9 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
+              showMobileControls 
+                ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" 
+                : "text-on-surface border-outline-variant/30 hover:bg-surface-container-high"
+            }`}
+            title="Toggle Tactical Panel"
+          >
+            <span className="material-symbols-outlined text-lg">tune</span>
+          </button>
 
           <button
             onClick={fetchState}
@@ -921,6 +934,68 @@ export default function App() {
 
       {/* MAIN LAYOUT CONTAINER */}
       <main className="flex-1 p-6 md:p-8 pb-16 max-w-[1800px] w-full mx-auto" id="dashboard-grid-container">
+        
+        {/* MOBILE NAVIGATION TABS (visible below lg) */}
+        <div className="lg:hidden flex overflow-x-auto scrollbar-none border-b border-outline-variant/30 gap-6 px-4 py-2 mb-6 bg-surface/40 backdrop-blur rounded-xl select-none shadow-sm">
+          {['perimeter', 'gates', 'logistics', 'incidents', 'broadcast'].map((tab) => (
+            <span
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`font-orbitron text-xs cursor-pointer pb-1 transition-all uppercase tracking-wider whitespace-nowrap ${
+                activeTab === tab 
+                  ? 'text-primary border-b-2 border-primary font-bold' 
+                  : 'text-on-surface-variant font-medium hover:text-primary'
+              }`}
+            >
+              {tab}
+            </span>
+          ))}
+        </div>
+
+        {/* COLLAPSIBLE MOBILE QUICK CONTROLS (visible below lg) */}
+        {showMobileControls && (
+          <div className="lg:hidden glass-panel rounded-xl p-4 mb-6 bg-surface border border-outline-variant/30 animate-fade-in shadow-md grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[9px] text-outline font-orbitron uppercase tracking-wider font-bold">Phase Selector</span>
+              <select
+                value={currentPhase}
+                onChange={(e) => handlePhaseChange(e.target.value as any)}
+                className="w-full bg-surface-container border border-outline-variant/40 text-xs text-on-surface rounded p-2 font-mono focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all font-bold uppercase"
+              >
+                <option value="ingress">Ingress</option>
+                <option value="halftime">Halftime</option>
+                <option value="egress">Egress</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[9px] text-outline font-orbitron uppercase tracking-wider font-bold">Arena Selector</span>
+              <select
+                value={selectedStadiumId}
+                onChange={(e) => {
+                  setSelectedStadiumId(e.target.value);
+                  handlePhaseChange(currentPhase, e.target.value);
+                }}
+                className="w-full bg-surface-container border border-outline-variant/40 text-xs text-on-surface rounded p-2 font-mono focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all font-bold"
+              >
+                <option value="metlife">MetLife (NY/NJ)</option>
+                <option value="azteca">Azteca (MX)</option>
+                <option value="sofi">SoFi (LA)</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[9px] text-outline font-orbitron uppercase tracking-wider font-bold">Atmosphere (Weather)</span>
+              <select
+                value={state?.weather || "SUNNY"}
+                onChange={(e) => handleUpdateWeather(e.target.value as any)}
+                className="w-full bg-surface-container border border-outline-variant/40 text-xs text-on-surface rounded p-2 font-mono focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all font-bold"
+              >
+                <option value="SUNNY">Sunny</option>
+                <option value="RAINY">Rainy</option>
+                <option value="LIGHTNING_STORM">Storm</option>
+              </select>
+            </div>
+          </div>
+        )}
         
         {/* TIME TRAVEL PROJECTION SLIDER */}
         <div className="glass-panel rounded-xl p-5 mb-6 bg-surface border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-sm">
@@ -1616,135 +1691,141 @@ export default function App() {
       </main>
 
       {/* FLOATING CHAT ASSISTANT WIDGET */}
-      <div className="fixed bottom-12 right-8 w-80 glass-panel rounded-2xl shadow-2xl border-primary/10 flex flex-col overflow-hidden z-50 bg-surface/95 transition-all">
-        <div className="p-3 bg-primary flex justify-between items-center text-white">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center border border-white/10 shadow-inner">
-              <span className="material-symbols-outlined text-white text-[18px]">smart_toy</span>
-            </div>
-            <div>
-              <p className="font-orbitron text-[10px] font-bold leading-none tracking-widest">FIFA VOLUNT-AI</p>
-              <p className="text-[8px] text-white/80 mt-1 font-mono uppercase">Tactical Support Core</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <select
-              value={userLanguage}
-              onChange={(e) => setUserLanguage(e.target.value)}
-              className="bg-primary-dark/20 text-white rounded text-[9px] border border-white/25 focus:outline-none py-0.5 px-1.5 font-mono cursor-pointer font-bold"
-            >
-              <option value="English" className="text-on-surface">EN</option>
-              <option value="Spanish" className="text-on-surface">ES</option>
-              <option value="Portuguese" className="text-on-surface">PT</option>
-              <option value="French" className="text-on-surface">FR</option>
-            </select>
-            <button
-              onClick={() => setShowAssistant(!showAssistant)}
-              className="text-white/80 hover:text-white transition-colors cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-base">{showAssistant ? "expand_more" : "expand_less"}</span>
-            </button>
-          </div>
-        </div>
-
-        {showAssistant && (
-          <>
-            <div className="p-4 h-64 overflow-y-auto space-y-3 text-[11px] bg-surface-container-low/40">
-              {chatHistory.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex flex-col gap-1 max-w-[85%] rounded-xl p-2.5 shadow-sm border animate-fade-in ${
-                    msg.sender === "user"
-                      ? "bg-primary/5 border-primary/20 text-on-surface self-end ml-auto"
-                      : msg.sender === "system"
-                        ? "bg-surface-container border-outline-variant/30 text-outline text-[9px] self-center w-full text-center rounded-md py-1 font-mono"
-                        : "bg-surface border-outline-variant/30 text-on-surface self-start mr-auto"
-                  }`}
-                >
-                  <p className="leading-relaxed whitespace-pre-wrap font-sans">{msg.text}</p>
-                  
-                  {msg.suggestedRoute && (
-                    <div className="mt-2 pt-2 border-t border-outline-variant/20 text-[9px] space-y-1.5 font-mono">
-                      <span className="text-primary font-bold flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[12px]">navigation</span>
-                        Route ({msg.suggestedRoute.mode}):
-                      </span>
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {msg.suggestedRoute.path.map((wp, wIdx) => (
-                          <span key={wIdx} className="flex items-center gap-1 font-mono">
-                            {wIdx > 0 && <span className="text-outline text-[8px]">&raquo;</span>}
-                            <span className="bg-surface-container border border-outline-variant/30 text-on-surface-variant px-1.5 py-0.5 rounded text-[8px] font-bold">
-                              {wp}
-                            </span>
-                          </span>
-                        ))}
-                      </div>
-                      <div className="text-[8px] text-outline mt-1">
-                        Travel Time: <strong className="text-on-surface font-bold">{msg.suggestedRoute.travelTime}m</strong>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-              {loadingGuidance && (
-                <div className="bg-surface border border-outline-variant/30 rounded-xl p-2.5 max-w-[80%] self-start mr-auto shadow-sm animate-fade-in flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 bg-primary rounded-full bounce-dot-1"></span>
-                  <span className="w-1.5 h-1.5 bg-primary rounded-full bounce-dot-2"></span>
-                  <span className="w-1.5 h-1.5 bg-primary rounded-full bounce-dot-3"></span>
-                  <span className="text-[9px] font-mono text-outline ml-1.5">Generating crowd-smart route...</span>
-                </div>
-              )}
-              <div ref={chatEndRef} />
-            </div>
-
-            <div className="p-2 border-t border-outline-variant/20 bg-surface-container-low flex flex-wrap gap-1">
-              <button
-                onClick={() => handleSendChatMessage("How do I bypass the massive Gate C crowd delay?")}
-                className="bg-surface hover:bg-surface-container-high border border-outline-variant/50 rounded-lg py-1 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px] font-mono uppercase"
-              >
-                Bypass Gate C Wait
-              </button>
-              <button
-                onClick={() => handleSendChatMessage("I am at South Overflow Parking. How do I get inside?")}
-                className="bg-surface hover:bg-surface-container-high border border-outline-variant/50 rounded-lg py-1 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px] font-mono uppercase"
-              >
-                Route from Lot H
-              </button>
-              <button
-                onClick={() => handleSendChatMessage("Where is the nearest food stall and how do I get there?")}
-                className="bg-surface hover:bg-surface-container-high border border-outline-variant/50 rounded-lg py-1 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px] font-mono uppercase"
-              >
-                Food Stall Route
-              </button>
-              <button
-                onClick={() => handleSendChatMessage("Where is the nearest washroom facility and how do I get there?")}
-                className="bg-surface hover:bg-surface-container-high border border-outline-variant/50 rounded-lg py-1 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px] font-mono uppercase"
-              >
-                Washroom Route
-              </button>
-            </div>
-
-            <div className="p-3 border-t border-outline-variant/20 bg-surface">
-              <div className="relative flex items-center">
-                <input
-                  type="text"
-                  placeholder="Ask for crowd-smart routing advice..."
-                  value={currentMessage}
-                  onChange={(e) => setCurrentMessage(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSendChatMessage(currentMessage)}
-                  className="w-full bg-surface-container-low border border-outline-variant/30 rounded-xl py-1.5 pl-3 pr-8 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary font-sans"
-                />
-                <button
-                  onClick={() => handleSendChatMessage(currentMessage)}
-                  className="absolute right-2.5 text-primary hover:scale-110 transition-transform cursor-pointer flex items-center justify-center"
-                >
-                  <span className="material-symbols-outlined text-[18px]">send</span>
-                </button>
+      {!showAssistant ? (
+        <button
+          onClick={() => setShowAssistant(true)}
+          className="fixed bottom-14 right-4 md:bottom-16 md:right-8 w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-xl hover:scale-105 active:scale-95 transition-all z-50 cursor-pointer animate-fade-in"
+          title="Open FIFA Volunt-AI"
+        >
+          <span className="material-symbols-outlined text-[24px]">smart_toy</span>
+        </button>
+      ) : (
+        <div className="fixed bottom-14 right-4 md:bottom-16 md:right-8 w-[calc(100vw-2rem)] sm:w-80 glass-panel rounded-2xl shadow-2xl border-primary/10 flex flex-col overflow-hidden z-50 bg-surface/95 transition-all animate-fade-in">
+          <div className="p-3 bg-primary flex justify-between items-center text-white">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center border border-white/10 shadow-inner">
+                <span className="material-symbols-outlined text-white text-[18px]">smart_toy</span>
+              </div>
+              <div>
+                <p className="font-orbitron text-[10px] font-bold leading-none tracking-widest">FIFA VOLUNT-AI</p>
+                <p className="text-[8px] text-white/80 mt-1 font-mono uppercase">Tactical Support Core</p>
               </div>
             </div>
-          </>
-        )}
-      </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={userLanguage}
+                onChange={(e) => setUserLanguage(e.target.value)}
+                className="bg-primary-dark/20 text-white rounded text-[9px] border border-white/25 focus:outline-none py-0.5 px-1.5 font-mono cursor-pointer font-bold"
+              >
+                <option value="English" className="text-on-surface">EN</option>
+                <option value="Spanish" className="text-on-surface">ES</option>
+                <option value="Portuguese" className="text-on-surface">PT</option>
+                <option value="French" className="text-on-surface">FR</option>
+              </select>
+              <button
+                onClick={() => setShowAssistant(false)}
+                className="text-white/80 hover:text-white transition-colors cursor-pointer flex items-center justify-center"
+              >
+                <span className="material-symbols-outlined text-base">close</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="p-4 h-64 overflow-y-auto space-y-3 text-[11px] bg-surface-container-low/40">
+            {chatHistory.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex flex-col gap-1 max-w-[85%] rounded-xl p-2.5 shadow-sm border animate-fade-in ${
+                  msg.sender === "user"
+                    ? "bg-primary/5 border-primary/20 text-on-surface self-end ml-auto"
+                    : msg.sender === "system"
+                      ? "bg-surface-container border-outline-variant/30 text-outline text-[9px] self-center w-full text-center rounded-md py-1 font-mono"
+                      : "bg-surface border-outline-variant/30 text-on-surface self-start mr-auto"
+                }`}
+              >
+                <p className="leading-relaxed whitespace-pre-wrap font-sans">{msg.text}</p>
+                
+                {msg.suggestedRoute && (
+                  <div className="mt-2 pt-2 border-t border-outline-variant/20 text-[9px] space-y-1.5 font-mono">
+                    <span className="text-primary font-bold flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[12px]">navigation</span>
+                      Route ({msg.suggestedRoute.mode}):
+                    </span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {msg.suggestedRoute.path.map((wp, wIdx) => (
+                        <span key={wIdx} className="flex items-center gap-1 font-mono">
+                          {wIdx > 0 && <span className="text-outline text-[8px]">&raquo;</span>}
+                          <span className="bg-surface-container border border-outline-variant/30 text-on-surface-variant px-1.5 py-0.5 rounded text-[8px] font-bold">
+                            {wp}
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="text-[8px] text-outline mt-1">
+                      Travel Time: <strong className="text-on-surface font-bold">{msg.suggestedRoute.travelTime}m</strong>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            {loadingGuidance && (
+              <div className="bg-surface border border-outline-variant/30 rounded-xl p-2.5 max-w-[80%] self-start mr-auto shadow-sm animate-fade-in flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 bg-primary rounded-full bounce-dot-1"></span>
+                <span className="w-1.5 h-1.5 bg-primary rounded-full bounce-dot-2"></span>
+                <span className="w-1.5 h-1.5 bg-primary rounded-full bounce-dot-3"></span>
+                <span className="text-[9px] font-mono text-outline ml-1.5">Generating crowd-smart route...</span>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+
+          <div className="p-2 border-t border-outline-variant/20 bg-surface-container-low flex flex-wrap gap-1">
+            <button
+              onClick={() => handleSendChatMessage("How do I bypass the massive Gate C crowd delay?")}
+              className="bg-surface hover:bg-surface-container-high border border-outline-variant/50 rounded-lg py-1 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px] font-mono uppercase"
+            >
+              Bypass Gate C Wait
+            </button>
+            <button
+              onClick={() => handleSendChatMessage("I am at South Overflow Parking. How do I get inside?")}
+              className="bg-surface hover:bg-surface-container-high border border-outline-variant/50 rounded-lg py-1 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px] font-mono uppercase"
+            >
+              Route from Lot H
+            </button>
+            <button
+              onClick={() => handleSendChatMessage("Where is the nearest food stall and how do I get there?")}
+              className="bg-surface hover:bg-surface-container-high border border-outline-variant/50 rounded-lg py-1 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px] font-mono uppercase"
+            >
+              Food Stall Route
+            </button>
+            <button
+              onClick={() => handleSendChatMessage("Where is the nearest washroom facility and how do I get there?")}
+              className="bg-surface hover:bg-surface-container-high border border-outline-variant/50 rounded-lg py-1 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px] font-mono uppercase"
+            >
+              Washroom Route
+            </button>
+          </div>
+
+          <div className="p-3 border-t border-outline-variant/20 bg-surface">
+            <div className="relative flex items-center">
+              <input
+                type="text"
+                placeholder="Ask for crowd-smart routing advice..."
+                value={currentMessage}
+                onChange={(e) => setCurrentMessage(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSendChatMessage(currentMessage)}
+                className="w-full bg-surface-container-low border border-outline-variant/30 rounded-xl py-1.5 pl-3 pr-8 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary font-sans"
+              />
+              <button
+                onClick={() => handleSendChatMessage(currentMessage)}
+                className="absolute right-2.5 text-primary hover:scale-110 transition-transform cursor-pointer flex items-center justify-center"
+              >
+                <span className="material-symbols-outlined text-[18px]">send</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer: Persistent Telemetry Logs */}
       <footer className="fixed bottom-0 left-0 right-0 h-10 z-40 bg-surface/90 backdrop-blur-md border-t border-outline-variant/30 flex items-center justify-between px-8 shadow-inner" id="main-footer">
