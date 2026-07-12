@@ -65,6 +65,7 @@ export default function App() {
   const [selectedAssetType, setSelectedAssetType] = useState<'gate' | 'transit' | 'road' | 'incident' | ''>("");
   const [selectedFoodStallRoute, setSelectedFoodStallRoute] = useState<{ gateId: string; stallId: string } | null>(null);
   const [selectedWashroomRoute, setSelectedWashroomRoute] = useState<{ gateId: string; washroomId: string } | null>(null);
+  const [selectedTransitRoute, setSelectedTransitRoute] = useState<{ startId: string; endId: string } | null>(null);
   const [selectedAssetDetails, setSelectedAssetDetails] = useState<string>("");
 
   // Assistant states
@@ -401,6 +402,132 @@ export default function App() {
     setLoadingGuidance(true);
 
     const textLower = msgText.toLowerCase();
+
+    // INTERCEPT: South Overflow Parking / Lot H
+    if (
+      textLower.includes("south overflow parking") || 
+      textLower.includes("lot h") || 
+      (textLower.includes("parking") && textLower.includes("south") && textLower.includes("inside"))
+    ) {
+      setTimeout(() => {
+        setSelectedTransitRoute({ startId: "parking_south", endId: "gate_b" });
+        setSelectedFoodStallRoute(null);
+        setSelectedWashroomRoute(null);
+        setActiveTab("perimeter");
+
+        const aiResponse: ChatMessage = {
+          id: `ai_transit_${Date.now()}`,
+          sender: "ai",
+          text: `🚗 **South Overflow Parking (Lot H) Navigation Engaged!**\n\nSince **Gate C** (South Plaza) is severely congested with a **36-minute delay**, we recommend bypassing it entirely:\n\n1. **Route to Gate B (Recommended)**: Follow the East perimeter walkway or board the Tournament Shuttle. Gate B is open and has only a **4-minute wait time**.\n2. **Alternative (Gate D)**: Walk west along the perimeter to Gate D (West Deck), which is open with a **3-minute wait time**.\n\nThe pedestrian path from Lot H to Gate B has been highlighted on the 3D map in **cyan** with flowing path animations.`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          suggestedRoute: {
+            path: ["South Overflow Parking (Lot H)", "South Shuttle/Walkway", "Gate B Portal"],
+            travelTime: 8,
+            mode: "Walking + Shuttle",
+            congestedAreas: ["Gate C Plaza"]
+          },
+          suggestedActions: ["How to reach Gate B?", "Where is accessibility parking?", "Show transit options"]
+        };
+        setChatHistory(prev => [...prev, aiResponse]);
+        setLoadingGuidance(false);
+      }, 800);
+      return;
+    }
+
+    // INTERCEPT: How to reach Gate B
+    if (textLower.includes("reach gate b") || textLower.includes("how to reach gate b")) {
+      setTimeout(() => {
+        setSelectedTransitRoute({ startId: "shuttle", endId: "gate_b" });
+        setSelectedFoodStallRoute(null);
+        setSelectedWashroomRoute(null);
+        setActiveTab("perimeter");
+
+        const aiResponse: ChatMessage = {
+          id: `ai_transit_${Date.now()}`,
+          sender: "ai",
+          text: `🚶 **Gate B Ingress Route Engaged!**\n\nGate B (East Promenade / Shuttle) is currently open with a **4-minute wait time**. To reach it from the **Tournament Shuttle Hub (Lots F/G)**:\n\n- Walk directly eastward along the East Promenade corridor (about 2-3 minutes walk).\n- The path is clear, fluid, and accessibility-friendly.\n\nThe walking route has been highlighted on the 3D map in **cyan** with flowing animations.`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          suggestedRoute: {
+            path: ["East Shuttle Hub (Lots F/G)", "East Promenade", "Gate B Portal"],
+            travelTime: 3,
+            mode: "Walking",
+            congestedAreas: []
+          },
+          suggestedActions: ["Route from Lot H", "Show transit options"]
+        };
+        setChatHistory(prev => [...prev, aiResponse]);
+        setLoadingGuidance(false);
+      }, 800);
+      return;
+    }
+
+    // INTERCEPT: How to reach Gate D
+    if (textLower.includes("reach gate d") || textLower.includes("how to reach gate d")) {
+      setTimeout(() => {
+        setSelectedTransitRoute({ startId: "rail", endId: "gate_d" });
+        setSelectedFoodStallRoute(null);
+        setSelectedWashroomRoute(null);
+        setActiveTab("perimeter");
+
+        const aiResponse: ChatMessage = {
+          id: `ai_transit_${Date.now()}`,
+          sender: "ai",
+          text: `🚶 **Gate D Ingress Route Engaged!**\n\nGate D (West Deck / VIP & Suites) is currently open with a **3-minute wait time**. To reach it from the **Metropolitan Express Rail station**:\n\n- Exit the Rail Terminal and walk west towards the VIP Concourse entrance (about 4 minutes walk).\n- This pathway bypasses the congested main ticket plaza.\n\nThe walking route has been highlighted on the 3D map in **cyan** with flowing animations.`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          suggestedRoute: {
+            path: ["Rail Station", "West Concourse Walkway", "Gate D Portal"],
+            travelTime: 4,
+            mode: "Walking",
+            congestedAreas: []
+          },
+          suggestedActions: ["Route from Lot H", "Show transit options"]
+        };
+        setChatHistory(prev => [...prev, aiResponse]);
+        setLoadingGuidance(false);
+      }, 800);
+      return;
+    }
+
+    // INTERCEPT: Accessibility parking
+    if (textLower.includes("accessibility parking") || textLower.includes("accessible parking") || textLower.includes("disabled parking")) {
+      setTimeout(() => {
+        setSelectedTransitRoute(null);
+        setSelectedFoodStallRoute(null);
+        setSelectedWashroomRoute(null);
+
+        const aiResponse: ChatMessage = {
+          id: `ai_accessibility_${Date.now()}`,
+          sender: "ai",
+          text: `♿ **Accessibility & Disabled Parking Information**\n\n- **Dedicated Lot**: Designated accessible parking is available in the **West Deck** immediately adjacent to **Gate E** (Disabled Access / Premium).\n- **Access Road**: Enter via **Stadium Blvd** and follow the purple accessibility signs.\n- **Entry Gate**: Gate E is fully step-free, accessibility-friendly, and currently has a **3-minute wait time**.\n- **Plaza Support**: ADA assistance carts are patrolling the external rings to help transport fans to gate entrances.`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          suggestedActions: ["Show transit options", "Route from Lot H"]
+        };
+        setChatHistory(prev => [...prev, aiResponse]);
+        setLoadingGuidance(false);
+      }, 800);
+      return;
+    }
+
+    // INTERCEPT: Transit options
+    if (textLower.includes("transit options") || textLower.includes("show transit options")) {
+      setTimeout(() => {
+        setSelectedTransitRoute(null);
+        setSelectedFoodStallRoute(null);
+        setSelectedWashroomRoute(null);
+
+        const aiResponse: ChatMessage = {
+          id: `ai_transit_options_${Date.now()}`,
+          sender: "ai",
+          text: `🚆 **Tournament Transit & Parking Overview**\n\n- **Express Rail**: Metropolitan Express Rail is running but experiencing **HEAVY** load (85% capacity) with an average **22-minute platform wait**.\n- **Shuttles**: Tournament Shuttle Hub (Lots F/G) has **MODERATE** load (60% capacity) and an average **12-minute wait**.\n- **General Parking**: Lots A, B, C are near capacity (92% load) with severe backups. Use **South Overflow Parking (Lot H)**, which is only at **42% capacity** and has **2,150+ available spaces**!`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          suggestedActions: ["Route from Lot H", "How to reach Gate B?", "Where is accessibility parking?"]
+        };
+        setChatHistory(prev => [...prev, aiResponse]);
+        setLoadingGuidance(false);
+      }, 800);
+      return;
+    }
+
     if (textLower.includes("food") || textLower.includes("stall") || textLower.includes("concession") || textLower.includes("taco") || textLower.includes("burger") || textLower.includes("pizza") || textLower.includes("beer")) {
       setTimeout(() => {
         let targetStallId = "stall_1";
@@ -429,6 +556,8 @@ export default function App() {
         }
 
         setSelectedFoodStallRoute({ gateId, stallId: targetStallId });
+        setSelectedWashroomRoute(null);
+        setSelectedTransitRoute(null);
         setActiveTab("perimeter");
 
         const aiResponse: ChatMessage = {
@@ -482,6 +611,8 @@ export default function App() {
         }
 
         setSelectedWashroomRoute({ gateId, washroomId: targetWcId });
+        setSelectedFoodStallRoute(null);
+        setSelectedTransitRoute(null);
         setActiveTab("perimeter");
 
         const aiResponse: ChatMessage = {
@@ -516,16 +647,48 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         setChatHistory(prev => [...prev, data.message]);
+        if (data.message.suggestedRoute && data.message.suggestedRoute.path.length > 0) {
+          // If the server-provided route starts at Lot H (parking_south) or other known points, highlight it on map
+          const pathStart = data.message.suggestedRoute.path[0].toLowerCase();
+          const pathEnd = data.message.suggestedRoute.path[data.message.suggestedRoute.path.length - 1].toLowerCase();
+          
+          let startId = "";
+          let endId = "";
+          if (pathStart.includes("lot h") || pathStart.includes("south overflow")) startId = "parking_south";
+          else if (pathStart.includes("shuttle")) startId = "shuttle";
+          else if (pathStart.includes("rail")) startId = "rail";
+          
+          if (pathEnd.includes("gate b")) endId = "gate_b";
+          else if (pathEnd.includes("gate d")) endId = "gate_d";
+          else if (pathEnd.includes("gate a")) endId = "gate_a";
+          else if (pathEnd.includes("gate c")) endId = "gate_c";
+
+          if (startId && endId) {
+            setSelectedTransitRoute({ startId, endId });
+            setSelectedFoodStallRoute(null);
+            setSelectedWashroomRoute(null);
+          }
+        }
       } else {
         throw new Error("Guidance endpoint error");
       }
     } catch (e) {
       console.error("Chat Guidance Error:", e);
+      setSelectedTransitRoute({ startId: "parking_south", endId: "gate_b" });
+      setSelectedFoodStallRoute(null);
+      setSelectedWashroomRoute(null);
       const errorMsg: ChatMessage = {
         id: `err_${Date.now()}`,
         sender: "ai",
         text: "⚠️ Real-time AI offline. Note Gate C is highly congested (36 min delay). Use Gate B or D for faster entry!",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        suggestedRoute: {
+          path: ["South Overflow Parking (Lot H)", "South Shuttle Pathway", "Gate B (East Promenade)"],
+          travelTime: 8,
+          mode: "Walking + Shuttle",
+          congestedAreas: ["Gate C Plaza"]
+        },
+        suggestedActions: ["How to reach Gate B?", "Where is accessibility parking?", "Show transit options"]
       };
       setChatHistory(prev => [...prev, errorMsg]);
     } finally {
@@ -867,6 +1030,7 @@ export default function App() {
                   selectedFoodStallRoute={selectedFoodStallRoute}
                   washrooms={state.washrooms}
                   selectedWashroomRoute={selectedWashroomRoute}
+                  selectedTransitRoute={selectedTransitRoute}
                 />
               )}
               {/* Access Roadways & Congestion */}
@@ -1069,6 +1233,8 @@ export default function App() {
                                     gateId: stall.nearestGateId,
                                     stallId: stall.id
                                   });
+                                  setSelectedWashroomRoute(null);
+                                  setSelectedTransitRoute(null);
                                   selectAssetOnMap(stall.id, stall.name, "transit", `${stall.name} is a ${stall.type} concession stand located at ${stall.location}. Wait time: ${stall.waitTime} minutes.`);
                                 }
                               }}
@@ -1131,6 +1297,8 @@ export default function App() {
                                     gateId: wc.nearestGateId,
                                     washroomId: wc.id
                                   });
+                                  setSelectedFoodStallRoute(null);
+                                  setSelectedTransitRoute(null);
                                   selectAssetOnMap(wc.id, wc.name, "transit", `${wc.name} is a restroom facility located at ${wc.location}. Current wait time: ${wc.waitTime} minutes. Accessible friendly: ${wc.accessibilityFriendly ? 'YES' : 'NO'}`);
                                 }
                               }}

@@ -15,6 +15,7 @@ interface StadiumMapProps {
   selectedFoodStallRoute?: { gateId: string; stallId: string } | null;
   washrooms?: Washroom[];
   selectedWashroomRoute?: { gateId: string; washroomId: string } | null;
+  selectedTransitRoute?: { startId: string; endId: string } | null;
 }
 
 export const StadiumMap: React.FC<StadiumMapProps> = ({
@@ -28,7 +29,8 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
   foodStalls = [],
   selectedFoodStallRoute = null,
   washrooms = [],
-  selectedWashroomRoute = null
+  selectedWashroomRoute = null,
+  selectedTransitRoute = null
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -700,6 +702,36 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
       wcParticlesList.push(pMesh);
     }
 
+    // --- TRANSIT ROUTE DYNAMIC PATH INITIALIZATION ---
+    const transitRouteGeo = new THREE.BufferGeometry();
+    const transitRouteMat = new THREE.LineDashedMaterial({
+      color: 0x06b6d4, // Cyan
+      dashSize: 1.5,
+      gapSize: 1.5,
+      transparent: true,
+      opacity: 0.8
+    });
+    const transitRouteLine = new THREE.Line(transitRouteGeo, transitRouteMat);
+    transitRouteLine.visible = false;
+    scene.add(transitRouteLine);
+    geometriesToDispose.push(transitRouteGeo);
+    materialsToDispose.push(transitRouteMat);
+
+    const transitParticlesList: THREE.Mesh[] = [];
+    const transitParticleGeo = new THREE.SphereGeometry(0.35, 8, 8);
+    const transitParticleMat = new THREE.MeshBasicMaterial({
+      color: 0x06b6d4
+    });
+    geometriesToDispose.push(transitParticleGeo);
+    materialsToDispose.push(transitParticleMat);
+
+    for (let i = 0; i < 5; i++) {
+      const pMesh = new THREE.Mesh(transitParticleGeo, transitParticleMat);
+      pMesh.visible = false;
+      scene.add(pMesh);
+      transitParticlesList.push(pMesh);
+    }
+
     // INCIDENTS (Pulsing Cones + rings)
     const incidentGroupsMap = new Map<string, THREE.Group>();
 
@@ -1055,6 +1087,36 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
       } else {
         wcRouteLine.visible = false;
         wcParticlesList.forEach(p => p.visible = false);
+      }
+
+      // Animate Transit Route
+      if (selectedTransitRoute) {
+        const startPos = labelPositions[selectedTransitRoute.startId];
+        const endPos = labelPositions[selectedTransitRoute.endId];
+        
+        if (startPos && endPos) {
+          const curve = new THREE.LineCurve3(
+            new THREE.Vector3(startPos.x, 0.2, startPos.z),
+            new THREE.Vector3(endPos.x, 0.2, endPos.z)
+          );
+          
+          const points = curve.getPoints(10);
+          transitRouteLine.geometry.setFromPoints(points);
+          transitRouteLine.computeLineDistances();
+          transitRouteLine.visible = true;
+
+          transitParticlesList.forEach((pMesh, idx) => {
+            pMesh.visible = true;
+            const pProgress = ((elapsed * 0.4) + (idx / 5)) % 1.0;
+            curve.getPointAt(pProgress, pMesh.position);
+          });
+        } else {
+          transitRouteLine.visible = false;
+          transitParticlesList.forEach(p => p.visible = false);
+        }
+      } else {
+        transitRouteLine.visible = false;
+        transitParticlesList.forEach(p => p.visible = false);
       }
 
       // Animate Incidents pulsing scale
