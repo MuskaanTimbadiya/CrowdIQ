@@ -22,7 +22,7 @@ export default function App() {
   // Theme state & persistence
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     const saved = localStorage.getItem("theme");
-    return (saved as "light" | "dark") || "light";
+    return (saved as "light" | "dark") || "dark";
   });
 
   useEffect(() => {
@@ -715,25 +715,25 @@ export default function App() {
 
   const renderAICore = () => {
     return (
-      <div className="glass-panel rounded-xl p-5 border-t-4 border-primary bg-surface shadow-xl shadow-primary/5">
+      <div className="glass-panel rounded-xl p-5 border-t-4 border-primary bg-surface shadow-xl hologram-scanlines">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
             <span className="material-symbols-outlined text-primary">psychology</span>
           </div>
           <div>
-            <h3 className="font-display font-semibold text-sm text-on-surface font-bold">Gemini AI Dispatch</h3>
-            <p className="text-[9px] font-mono text-outline tracking-widest uppercase font-bold">Engine v2.5 Tactical</p>
+            <h3 className="font-orbitron font-semibold text-sm text-on-surface uppercase tracking-wider">Gemini AI Dispatch</h3>
+            <p className="text-[9px] font-mono text-outline tracking-widest uppercase">Engine v2.5 Tactical</p>
           </div>
         </div>
         
-        <p className="text-[11px] text-on-surface-variant mb-4 leading-relaxed bg-primary/5 p-3 rounded-lg border border-primary/10">
-          Evaluate live gate processing and vehicular delays. Generates dynamic operational recommendations.
+        <p className="text-[11px] text-on-surface-variant mb-4 leading-relaxed bg-primary/5 p-3 rounded-lg border border-primary/10 font-sans">
+          Evaluating live gate processing and vehicular delays. Generates dynamic operational recommendations.
         </p>
         
         <button
           onClick={handleTriggerAIOptimize}
           disabled={loadingAI}
-          className="w-full bg-primary py-2.5 rounded-xl text-white font-bold font-mono text-xs flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/30 transition-all active:scale-95 cursor-pointer disabled:opacity-50 shimmer-btn"
+          className="w-full bg-primary py-2.5 rounded-xl text-white font-bold font-orbitron text-xs flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/30 transition-all active:scale-95 cursor-pointer disabled:opacity-50 shimmer-btn"
         >
           <span className="material-symbols-outlined text-sm">auto_fix_high</span>
           {loadingAI ? "Analyzing..." : "OPTIMIZE COMMAND"}
@@ -742,21 +742,28 @@ export default function App() {
         <div className="mt-4 space-y-3 max-h-[170px] overflow-y-auto pr-1">
           {state?.optimizations.slice(0, 2).map((opt) => (
             <div key={opt.id} className={`p-2.5 rounded-lg text-xs border font-mono ${
-              opt.applied ? "bg-slate-50 border-outline-variant/30 opacity-70" : "bg-primary/5 border-primary/20"
+              opt.applied ? "bg-surface-container-low border-outline-variant/30 opacity-70" : "bg-primary/5 border-primary/20"
             }`}>
-              <div className="flex justify-between items-start gap-1">
-                <span className="font-bold text-on-surface leading-snug">⚡ {opt.title}</span>
-                <span className="text-[8px] bg-primary/10 text-primary px-1 rounded uppercase font-bold shrink-0">{opt.urgency}</span>
+              <div className="flex justify-between items-start gap-2">
+                <span className="font-bold text-on-surface leading-snug flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px] text-primary">bolt</span>
+                  {opt.title}
+                </span>
+                <span className={`text-[8px] px-1 rounded uppercase font-bold shrink-0 ${
+                  opt.urgency === 'CRITICAL' ? 'bg-status-critical/10 text-status-critical' : 'bg-status-alert/10 text-status-alert'
+                }`}>{opt.urgency}</span>
               </div>
-              <p className="text-[10px] text-on-surface-variant mt-1">{opt.description}</p>
-              <div className="mt-2 flex justify-between items-center text-[9px] text-outline">
+              <p className="text-[10px] text-on-surface-variant mt-1.5 leading-relaxed font-sans">{opt.description}</p>
+              <div className="mt-2.5 pt-2 border-t border-outline-variant/20 flex justify-between items-center text-[9px] text-outline">
                 <span>Impact: {opt.estimatedImpact}</span>
                 {opt.applied ? (
-                  <span className="text-status-go font-bold">Applied</span>
+                  <span className="text-status-go font-bold flex items-center gap-0.5">
+                    <span className="material-symbols-outlined text-[10px]">check_circle</span> Active
+                  </span>
                 ) : (
                   <button
                     onClick={() => handleApplyOptimization(opt.id, opt.title)}
-                    className="text-primary hover:underline font-bold"
+                    className="text-primary hover:underline font-bold cursor-pointer"
                   >
                     Deploy
                   </button>
@@ -774,16 +781,16 @@ export default function App() {
       
       {/* CRITICAL EVACUATION DRILL ACTIVE BANNER */}
       {state?.evacuationModeActive && (
-        <div className="bg-red-600 text-white py-2 px-4 flex items-center justify-between z-40 shadow-lg border-b border-red-700 animate-pulse font-mono">
+        <div className="bg-status-critical text-white py-2.5 px-4 flex items-center justify-between z-50 shadow-lg border-b border-status-critical/30 animate-pulse font-mono">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[20px] animate-spin">warning</span>
-            <span className="text-xs uppercase font-extrabold tracking-widest">
-              EMERGENCY DRILL COMPROMISE ACTIVE: FULL VENUE EVACUATION PROTOCOLS IN PROGRESS
+            <span className="text-xs uppercase font-bold tracking-wider">
+              EMERGENCY DRILL ACTIVE: FULL VENUE EVACUATION PROTOCOLS IN PROGRESS
             </span>
           </div>
           <button
             onClick={() => handleToggleEvacuation(false)}
-            className="bg-white text-red-600 hover:bg-red-50 text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded cursor-pointer transition-colors shadow shimmer-btn"
+            className="bg-white text-status-critical hover:bg-white/90 text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded cursor-pointer transition-colors shadow shimmer-btn"
           >
             Deactivate Drill
           </button>
@@ -792,14 +799,14 @@ export default function App() {
 
       {/* GLOBAL ACTIVE EMERGENCY SCROLLING TICKER */}
       {activeAnnouncements.some(a => a.broadcastActive) && (
-        <div className="bg-red-50 border-b border-red-200 py-1.5 px-4 overflow-hidden relative flex items-center z-30 shadow-sm">
-          <div className="bg-red-600 text-white text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded flex items-center gap-1 shrink-0 animate-pulse font-mono">
-            <span className="material-symbols-outlined text-[13px]">volume_up</span> LIVE BROADCAST TICKER
+        <div className="bg-status-critical/10 border-b border-status-critical/20 py-2 px-4 overflow-hidden relative flex items-center z-30 shadow-sm">
+          <div className="bg-status-critical text-white text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded flex items-center gap-1 shrink-0 animate-pulse font-orbitron">
+            <span className="material-symbols-outlined text-[12px]">volume_up</span> BROADCAST TICKER
           </div>
-          <div className="ml-4 flex gap-8 animate-marquee whitespace-nowrap text-xs font-mono font-medium text-red-700">
+          <div className="ml-4 flex gap-8 animate-marquee whitespace-nowrap text-xs font-mono font-medium text-status-critical">
             {activeAnnouncements.filter(a => a.broadcastActive).map((ann) => (
               <span key={ann.id} className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+                <span className="w-1.5 h-1.5 bg-status-critical rounded-full animate-ping" />
                 <strong>[{ann.title}]</strong> {ann.content} (Target: {ann.targetAudience})
               </span>
             ))}
@@ -808,78 +815,89 @@ export default function App() {
       )}
 
       {/* TOP NAVIGATION HEADER */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center w-full px-8 h-20 bg-surface border-b border-outline-variant/30 shadow-sm" id="main-header">
+      <header className="fixed top-0 left-0 right-0 z-40 flex justify-between items-center w-full px-8 h-20 bg-surface/90 backdrop-blur-md border-b border-outline-variant/30 shadow-sm" id="main-header">
         <div className="flex items-center gap-6">
-          <span className="font-display font-bold text-2xl text-primary tracking-tighter">CrowdIQ</span>
+          <div className="flex items-center gap-2 select-none">
+            <span className="material-symbols-outlined text-primary text-2xl animate-pulse">radar</span>
+            <span className="font-orbitron font-black text-xl text-primary tracking-widest">CROWDIQ</span>
+          </div>
           <div className="h-8 w-[1px] bg-outline-variant hidden md:block"></div>
-          <nav className="hidden lg:flex items-center gap-8">
-            <span onClick={() => setActiveTab('perimeter')} className={`font-mono text-xs cursor-pointer pb-1 transition-all ${activeTab === 'perimeter' ? 'text-primary border-b-2 border-primary font-bold' : 'text-on-surface-variant font-medium hover:text-primary'}`}>Perimeter</span>
-            <span onClick={() => setActiveTab('gates')} className={`font-mono text-xs cursor-pointer pb-1 transition-all ${activeTab === 'gates' ? 'text-primary border-b-2 border-primary font-bold' : 'text-on-surface-variant font-medium hover:text-primary'}`}>Gates</span>
-            <span onClick={() => setActiveTab('logistics')} className={`font-mono text-xs cursor-pointer pb-1 transition-all ${activeTab === 'logistics' ? 'text-primary border-b-2 border-primary font-bold' : 'text-on-surface-variant font-medium hover:text-primary'}`}>Logistics</span>
-            <span onClick={() => setActiveTab('incidents')} className={`font-mono text-xs cursor-pointer pb-1 transition-all ${activeTab === 'incidents' ? 'text-primary border-b-2 border-primary font-bold' : 'text-on-surface-variant font-medium hover:text-primary'}`}>Incidents</span>
-            <span onClick={() => setActiveTab('broadcast')} className={`font-mono text-xs cursor-pointer pb-1 transition-all ${activeTab === 'broadcast' ? 'text-primary border-b-2 border-primary font-bold' : 'text-on-surface-variant font-medium hover:text-primary'}`}>Broadcast</span>
+          <nav className="hidden lg:flex items-center gap-6">
+            {['perimeter', 'gates', 'logistics', 'incidents', 'broadcast'].map((tab) => (
+              <span
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`font-orbitron text-xs cursor-pointer pb-1 transition-all uppercase tracking-wider ${
+                  activeTab === tab 
+                    ? 'text-primary border-b-2 border-primary font-bold' 
+                    : 'text-on-surface-variant font-medium hover:text-primary'
+                }`}
+              >
+                {tab}
+              </span>
+            ))}
           </nav>
         </div>
 
         <div className="flex items-center gap-3">
           {/* Match telemetry pill */}
-          <div className="hidden xl:flex items-center gap-4 glass-panel px-4 py-1.5 rounded-full border border-primary/10 bg-surface mr-2 select-none">
+          <div className="hidden xl:flex items-center gap-4 glass-panel px-4 py-2 rounded-lg border border-primary/10 bg-surface-container-low select-none">
             <div className="flex flex-col items-center">
-              <span className="font-mono text-[8px] text-outline uppercase tracking-widest leading-none">Quarter-Final</span>
-              <span className="font-display font-bold text-[10px] text-on-surface mt-0.5">ARG <span className="text-primary mx-0.5">vs</span> ENG</span>
+              <span className="font-mono text-[8px] text-outline uppercase tracking-wider leading-none">Quarter-Final</span>
+              <span className="font-orbitron font-bold text-[10px] text-on-surface mt-1">ARG vs ENG</span>
             </div>
             <div className="h-5 w-[1px] bg-outline-variant"></div>
             <div className="flex flex-col items-center">
-              <span className="font-mono text-[8px] text-outline uppercase tracking-widest leading-none">Local Time</span>
-              <span className="font-mono text-[10px] text-primary font-bold mt-0.5">{localTime || "06:37:16 AM"}</span>
+              <span className="font-mono text-[8px] text-outline uppercase tracking-wider leading-none">Local Time</span>
+              <span className="font-mono text-[10px] text-primary font-bold mt-1">{localTime || "00:00:00 AM"}</span>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
-            <span className="text-[9px] text-outline font-mono uppercase tracking-wider font-semibold px-1">Phase:</span>
+          <div className="flex flex-wrap items-center gap-1.5 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
+            <span className="text-[8px] text-outline font-orbitron uppercase tracking-wider font-semibold px-1">Phase:</span>
             <select
               value={currentPhase}
               onChange={(e) => handlePhaseChange(e.target.value as any)}
-              className="bg-surface border border-outline-variant/30 text-xs text-on-surface rounded px-1.5 py-0.5 font-sans focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all cursor-pointer"
+              className="bg-surface border border-outline-variant/30 text-[10px] text-on-surface rounded px-1.5 py-0.5 font-mono focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all cursor-pointer font-bold uppercase"
             >
-              <option value="ingress" className="bg-surface text-on-surface">Ingress</option>
-              <option value="halftime" className="bg-surface text-on-surface">Halftime</option>
-              <option value="egress" className="bg-surface text-on-surface">Egress</option>
+              <option value="ingress">Ingress</option>
+              <option value="halftime">Halftime</option>
+              <option value="egress">Egress</option>
             </select>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
-            <span className="text-[9px] text-outline font-mono uppercase tracking-wider font-semibold px-1">Arena:</span>
+          <div className="flex flex-wrap items-center gap-1.5 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
+            <span className="text-[8px] text-outline font-orbitron uppercase tracking-wider font-semibold px-1">Arena:</span>
             <select
               value={selectedStadiumId}
               onChange={(e) => {
                 setSelectedStadiumId(e.target.value);
                 handlePhaseChange(currentPhase, e.target.value);
               }}
-              className="bg-surface border border-outline-variant/30 text-xs text-on-surface rounded px-1.5 py-0.5 font-sans focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all cursor-pointer"
+              className="bg-surface border border-outline-variant/30 text-[10px] text-on-surface rounded px-1.5 py-0.5 font-mono focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all cursor-pointer font-bold"
             >
-              <option value="metlife" className="bg-surface text-on-surface">MetLife (NY/NJ)</option>
-              <option value="azteca" className="bg-surface text-on-surface">Estadio Azteca (MX)</option>
-              <option value="sofi" className="bg-surface text-on-surface">SoFi Stadium (LA)</option>
+              <option value="metlife">MetLife (NY/NJ)</option>
+              <option value="azteca">Azteca (MX)</option>
+              <option value="sofi">SoFi (LA)</option>
             </select>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
-            <span className="text-[9px] text-outline font-mono uppercase tracking-wider font-semibold px-1">Weather:</span>
+          <div className="flex flex-wrap items-center gap-1.5 bg-surface-container border border-outline-variant/30 p-1 rounded-lg">
+            <span className="text-[8px] text-outline font-orbitron uppercase tracking-wider font-semibold px-1">Atmosphere:</span>
             <select
               value={state?.weather || "SUNNY"}
               onChange={(e) => handleUpdateWeather(e.target.value as any)}
-              className="bg-surface border border-outline-variant/30 text-xs text-on-surface rounded px-1.5 py-0.5 font-sans focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all cursor-pointer"
+              className="bg-surface border border-outline-variant/30 text-[10px] text-on-surface rounded px-1.5 py-0.5 font-mono focus:outline-none focus:ring-1 focus:ring-primary/60 transition-all cursor-pointer font-bold"
             >
-              <option value="SUNNY">☀️ Sunny</option>
-              <option value="RAINY">🌧️ Rainy</option>
-              <option value="LIGHTNING_STORM">⛈️ Storm</option>
+              <option value="SUNNY">Sunny</option>
+              <option value="RAINY">Rainy</option>
+              <option value="LIGHTNING_STORM">Storm</option>
             </select>
           </div>
 
           <button
             onClick={fetchState}
-            className="w-9 h-9 rounded-xl border border-outline-variant/30 flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-all cursor-pointer"
+            className="w-9 h-9 rounded-lg border border-outline-variant/30 flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-all cursor-pointer"
             title="Sync State"
           >
             <span className="material-symbols-outlined text-lg">refresh</span>
@@ -887,7 +905,7 @@ export default function App() {
           
           <button
             onClick={() => setTheme(p => p === "light" ? "dark" : "light")}
-            className="w-9 h-9 rounded-xl border border-outline-variant/30 flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-all cursor-pointer"
+            className="w-9 h-9 rounded-lg border border-outline-variant/30 flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-all cursor-pointer"
             title={theme === "light" ? "Switch to Dark Theme" : "Switch to Light Theme"}
           >
             <span className="material-symbols-outlined text-lg">
@@ -895,7 +913,7 @@ export default function App() {
             </span>
           </button>
 
-          <div className="w-9 h-9 rounded-full border border-secondary/20 overflow-hidden shadow-inner hidden md:block">
+          <div className="w-9 h-9 rounded-md border border-primary/20 overflow-hidden shadow-inner hidden md:block">
             <img className="w-full h-full object-cover" alt="Director Avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPkq0M20VwenWX3hOvHaSdjSAh__Y7H8ZdC4qhDw9rGyzBvZo2wZmW1rZWvjdcmgO56Kk4AbamaWocDNun37m-Cym_vZf3y0P6womwIKdQ1QCLvWv8yVkpePJo9qo8Y7R-klEWnV2hDEw2orNgu8RvRcadB8xEsWmit3RYKjG3_8yheqrFP-mCZ6KI6aPNsTTGCg0HPQIjJl3wShxiGTM-_MsjtWH41M7ijlqHZCMVjrnBLykgmWc"/>
           </div>
         </div>
@@ -905,15 +923,15 @@ export default function App() {
       <main className="flex-1 p-6 md:p-8 pb-16 max-w-[1800px] w-full mx-auto" id="dashboard-grid-container">
         
         {/* TIME TRAVEL PROJECTION SLIDER */}
-        <div className="glass-panel rounded-xl p-4 mb-6 bg-surface border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+        <div className="glass-panel rounded-xl p-5 mb-6 bg-surface border border-outline-variant/30 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-sm">
           <div className="flex-grow">
-            <div className="flex justify-between items-center mb-1">
-              <span className="font-mono text-xs uppercase tracking-wider text-primary font-bold flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[16px] animate-pulse">timeline</span>
-                Occupancy Forecasting Slider
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-orbitron text-xs uppercase tracking-widest text-primary font-bold flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[16px] animate-pulse">analytics</span>
+                Occupancy Forecasting Console
               </span>
-              <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary">
-                {timeOffset === 0 ? "LIVE CURRENT" : timeOffset < 0 ? `${timeOffset} mins (Historical)` : `+${timeOffset} mins (Forecasted)`}
+              <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                {timeOffset === 0 ? "LIVE REAL-TIME" : timeOffset < 0 ? `${timeOffset}m (HISTORICAL)` : `+${timeOffset}m (PROJECTION)`}
               </span>
             </div>
             <input
@@ -924,25 +942,25 @@ export default function App() {
               onChange={(e) => setTimeOffset(Number(e.target.value))}
               className="w-full h-1 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none"
             />
-            <div className="flex justify-between text-[8px] text-outline font-mono mt-1 uppercase tracking-wider">
+            <div className="flex justify-between text-[8px] text-outline font-mono mt-2 uppercase tracking-widest font-bold">
               <span>-90m (Gates Open)</span>
               <span>-60m</span>
               <span>-30m (Peak Ingress)</span>
-              <span className="font-bold text-primary">0m (Kickoff)</span>
+              <span className="font-black text-primary">0m (Kickoff)</span>
               <span>+30m</span>
               <span>+60m (Egress Exit)</span>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 shrink-0 bg-surface-container/40 p-3 rounded-lg border border-outline-variant/20 w-full md:w-auto">
+          <div className="grid grid-cols-2 gap-4 shrink-0 bg-surface-container-low p-3 rounded-lg border border-outline-variant/30 w-full md:w-auto">
             <div className="text-center md:w-28">
-              <span className="text-[9px] text-outline block uppercase font-bold tracking-wider">Forecast Load</span>
-              <span className="font-mono text-base text-status-go font-bold">
+              <span className="text-[8px] text-outline block uppercase font-bold tracking-wider font-orbitron">Forecast Load</span>
+              <span className="font-mono text-lg text-status-go font-bold mt-1 block">
                 {Math.round(getForecastedAttendance(timeOffset) * 100)}%
               </span>
             </div>
-            <div className="text-center md:w-28">
-              <span className="text-[9px] text-outline block uppercase font-bold tracking-wider">Proj. Delays</span>
-              <span className="font-mono text-base text-status-critical font-bold">
+            <div className="text-center md:w-28 border-l border-outline-variant/20">
+              <span className="text-[8px] text-outline block uppercase font-bold tracking-wider font-orbitron">Projected Delay</span>
+              <span className="font-mono text-lg text-status-critical font-bold mt-1 block">
                 {getForecastedDelay(timeOffset)} mins
               </span>
             </div>
@@ -950,7 +968,7 @@ export default function App() {
         </div>
 
         {activeTab === "perimeter" && (
-          <div className="grid grid-cols-12 gap-6 animate-fade-in">
+          <div className="grid grid-cols-12 gap-6">
             {/* Middle Column (Lg: 8): Map & Roads */}
             <div className="col-span-12 lg:col-span-8 flex flex-col gap-6 animate-stagger-1" id="main-map-column">
               {state && (
@@ -971,8 +989,9 @@ export default function App() {
               )}
               {/* Access Roadways & Congestion */}
               <div>
-                <h3 className="font-mono text-xs uppercase text-outline mb-3 font-bold">
-                  🛣️ Access Roadways &amp; Congestion
+                <h3 className="font-orbitron text-xs uppercase text-outline mb-3 font-bold tracking-wider flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-primary text-base">alt_route</span>
+                  Access Roadways &amp; Congestion Telemetry
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {state?.roads.map((road) => {
@@ -987,11 +1006,11 @@ export default function App() {
                         key={road.id}
                         onClick={() => selectAssetOnMap(road.id, road.name, 'road', `${road.name} direction delay is ${road.delayMinutes} mins. Contraflow configuration: ${road.laneControlsActive ? 'ACTIVE' : 'OFF'}`)}
                         className={`glass-panel rounded-xl p-4 bg-surface cursor-pointer transition-all border ${
-                          isSelected ? "border-primary shadow-md animate-pulse-glow-primary" : "border-outline-variant/40 hover:bg-slate-50"
+                          isSelected ? "border-primary shadow-md animate-pulse-glow-primary bg-surface-container-low" : "border-outline-variant/40 hover:bg-surface-container-low"
                         }`}
                       >
                         <div className="flex justify-between items-start mb-3">
-                          <h4 className="font-mono text-[10px] text-on-surface font-bold leading-tight">{road.name}</h4>
+                          <h4 className="font-orbitron text-[10px] text-on-surface font-bold leading-tight uppercase tracking-wider">{road.name}</h4>
                           <span className="material-symbols-outlined text-outline text-[16px]">
                             {road.congestion === "LOW" ? "trending_down" : "trending_up"}
                           </span>
@@ -1002,7 +1021,7 @@ export default function App() {
                           <div className="flex justify-between"><span className="text-outline">Entry Delay</span><span className={`font-bold ${delayColor}`}>+{road.delayMinutes} MINS</span></div>
                         </div>
                         {road.laneControlsActive && (
-                          <div className="mt-3 p-1 bg-surface-container rounded text-[9px] text-center text-outline font-bold uppercase tracking-wider">REVERSIBLE ACTIVE</div>
+                          <div className="mt-3 p-1.5 bg-status-critical/10 border border-status-critical/20 rounded text-[9px] text-center text-status-critical font-bold uppercase tracking-widest animate-pulse">REVERSIBLE LANE ACTIVE</div>
                         )}
                       </div>
                     );
@@ -1019,14 +1038,17 @@ export default function App() {
         )}
 
         {activeTab === "gates" && (
-          <div className="grid grid-cols-12 gap-6 animate-fade-in">
+          <div className="grid grid-cols-12 gap-6">
             {/* Center column - Portals & Gate Queues */}
             <div className="col-span-12 lg:col-span-8 flex flex-col gap-6 animate-stagger-1">
               {/* Portals & Gate Queues */}
               <div id="gates-card" className="glass-panel rounded-xl flex flex-col bg-surface overflow-hidden shadow-sm">
                 <div className="p-4 border-b border-outline-variant/30 flex justify-between items-center bg-surface-container-low/50">
-                  <span className="font-mono text-xs uppercase text-on-surface font-bold">Portals &amp; Gate Queues</span>
-                  <span className="px-2 py-0.5 bg-surface-container-highest rounded text-[10px] font-mono text-on-surface-variant font-semibold">~10M WAIT</span>
+                  <span className="font-orbitron text-xs uppercase text-on-surface font-bold tracking-wider flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-primary text-base">sensor_door</span>
+                    Portals &amp; Gate Telemetry
+                  </span>
+                  <span className="px-2 py-0.5 bg-surface-container-highest rounded text-[9px] font-mono text-primary font-bold border border-primary/20">~10M AVG WAIT</span>
                 </div>
                 <div className="p-4 space-y-4">
                   {state?.gates.map((gate) => {
@@ -1044,11 +1066,11 @@ export default function App() {
                         key={gate.id}
                         onClick={() => selectAssetOnMap(gate.id, gate.name, 'gate', `Throughput is currently ${gate.throughputRate} fans/minute with ${gate.assignedVolunteers} active lane monitors.`)}
                         className={`p-3 bg-surface-container-low border rounded-lg border-l-4 cursor-pointer transition-all ${borderLeftColor} ${
-                          isSelected ? "border-primary shadow-md bg-surface animate-pulse-glow-primary" : "border-outline-variant/50 hover:bg-surface-container-low/80"
+                          isSelected ? "border-primary shadow-md bg-surface animate-pulse-glow-primary" : "border-outline-variant/50 hover:bg-surface-container/50"
                         }`}
                       >
                         <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-mono text-xs text-on-surface font-bold">{gate.name}</h4>
+                          <h4 className="font-orbitron text-xs text-on-surface font-bold tracking-wide uppercase">{gate.name}</h4>
                           <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
                             gate.status === "OPEN" ? "bg-status-go/10 text-status-go" :
                             gate.status === "CONGESTED" ? "bg-status-alert/10 text-status-alert" : "bg-status-critical/10 text-status-critical"
@@ -1058,21 +1080,44 @@ export default function App() {
                         </div>
                         <div className="grid grid-cols-3 gap-2 text-xs font-mono">
                           <div>
-                            <p className="text-[9px] text-outline uppercase">Queue</p>
-                            <p className="font-bold text-on-surface">{gate.queueCount.toLocaleString()}</p>
+                            <p className="text-[9px] text-outline uppercase">Queue Size</p>
+                            <p className="font-bold text-on-surface mt-0.5">{gate.queueCount.toLocaleString()}</p>
                           </div>
                           <div>
-                            <p className="text-[9px] text-outline uppercase">Wait</p>
-                            <p className={`font-bold ${waitTextColor}`}>{gate.avgWaitTime}m</p>
+                            <p className="text-[9px] text-outline uppercase">Wait Time</p>
+                            <p className={`font-bold mt-0.5 ${waitTextColor}`}>{gate.avgWaitTime} mins</p>
                           </div>
                           <div>
-                            <p className="text-[9px] text-outline uppercase">Flow</p>
-                            <p className="text-on-surface">{gate.throughputRate}/m</p>
+                            <p className="text-[9px] text-outline uppercase">Processing Flow</p>
+                            <p className="text-on-surface mt-0.5 font-bold">{gate.throughputRate}/min</p>
                           </div>
                         </div>
-                        <div className="mt-2 pt-1 border-t border-outline-variant/30 flex items-center justify-between text-[9px] text-outline">
-                          <span>👤 {gate.assignedVolunteers} stewards</span>
-                          {gate.accessibilityFriendly && <span className="text-status-go">♿ Step-Free</span>}
+                        <div className="mt-2.5 pt-2 border-t border-outline-variant/30 flex items-center justify-between text-[10px] text-outline">
+                          <div className="flex items-center gap-1.5 font-bold text-on-surface">
+                            <span className="material-symbols-outlined text-[13px] text-primary">engineering</span>
+                            <span>{gate.assignedVolunteers} Stewards</span>
+                            <div className="flex gap-1 ml-2">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleRedeployStaff(gate.id, -1); }}
+                                className="w-5 h-5 rounded bg-surface-container hover:bg-primary/20 text-on-surface flex items-center justify-center font-bold border border-outline-variant/30 cursor-pointer text-xs"
+                                title="Reduce Volunteers"
+                              >
+                                -
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleRedeployStaff(gate.id, 1); }}
+                                className="w-5 h-5 rounded bg-surface-container hover:bg-primary/20 text-on-surface flex items-center justify-center font-bold border border-outline-variant/30 cursor-pointer text-xs"
+                                title="Assign Volunteer"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+                          {gate.accessibilityFriendly && (
+                            <span className="text-status-go font-bold flex items-center gap-0.5">
+                              <span className="material-symbols-outlined text-[12px]">accessible</span> Accessible
+                            </span>
+                          )}
                         </div>
                       </div>
                     );
@@ -1089,36 +1134,39 @@ export default function App() {
         )}
 
         {activeTab === "logistics" && (
-          <div className="grid grid-cols-12 gap-6 animate-fade-in">
+          <div className="grid grid-cols-12 gap-6">
             {/* Arena Fill Rate and Parking/Transit */}
             <div className="col-span-12 lg:col-span-4 flex flex-col gap-6 animate-stagger-1">
               {state && (
                 <div className="glass-panel rounded-xl p-5 relative overflow-hidden bg-surface shadow-sm">
-                  <div className="absolute top-2 right-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-status-go status-glow-go"></div>
+                  <div className="absolute top-3 right-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-status-go animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
                   </div>
                   <div className="flex justify-between items-end mb-3">
-                    <span className="font-mono text-xs uppercase text-outline">Arena Fill Rate</span>
-                    <span className="font-display font-bold text-lg text-status-go">
+                    <span className="font-orbitron text-xs uppercase text-outline font-bold tracking-wider flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-primary text-base">stadium</span>
+                      Arena Load Factor
+                    </span>
+                    <span className="font-orbitron font-bold text-lg text-status-go tracking-wide">
                       {Math.round((state.stadium.currentAttendance / state.stadium.capacity) * 100)}%
                     </span>
                   </div>
-                  <div className="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                  <div className="w-full h-2.5 bg-surface-container-highest rounded-full overflow-hidden border border-outline-variant/20 p-[1px]">
                     <div
-                      className="h-full bg-status-go transition-all duration-1000"
+                      className="h-full bg-status-go rounded-full transition-all duration-1000"
                       style={{ width: `${(state.stadium.currentAttendance / state.stadium.capacity) * 100}%` }}
                     />
                   </div>
-                  <div className="flex justify-between mt-3 text-xs">
+                  <div className="flex justify-between mt-3 text-[10px] font-mono">
                     <div className="flex flex-col">
-                      <span className="font-mono text-[9px] text-outline">Attendance</span>
-                      <span className="font-mono text-on-surface font-bold">
+                      <span className="text-outline uppercase text-[8px]">Attendance</span>
+                      <span className="text-on-surface font-bold mt-0.5">
                         {state.stadium.currentAttendance.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex flex-col items-end">
-                      <span className="font-mono text-[9px] text-outline">Capacity</span>
-                      <span className="font-mono text-on-surface">
+                      <span className="text-outline uppercase text-[8px]">Capacity</span>
+                      <span className="text-on-surface mt-0.5 font-bold">
                         {state.stadium.capacity.toLocaleString()}
                       </span>
                     </div>
@@ -1128,7 +1176,7 @@ export default function App() {
 
               {state?.foodStalls && (
                 <div className="glass-panel rounded-xl p-4 bg-surface shadow-sm border border-outline-variant/30 flex flex-col">
-                  <h4 className="font-mono text-xs text-on-surface uppercase mb-3 flex items-center gap-2 font-bold select-none">
+                  <h4 className="font-orbitron text-xs text-on-surface uppercase mb-3 flex items-center gap-2 font-bold tracking-wider select-none">
                     <span className="material-symbols-outlined text-primary text-base">restaurant</span>
                     Concessions &amp; Food Stalls
                   </h4>
@@ -1139,27 +1187,30 @@ export default function App() {
                         stall.waitTime < 10 ? "text-status-go" :
                         stall.waitTime < 15 ? "text-status-alert" : "text-status-critical";
                       
-                      const icon = 
-                        stall.type === "TACOS" ? "🌮" :
-                        stall.type === "BURGERS" ? "🍔" :
-                        stall.type === "PIZZA" ? "🍕" : "🍺";
+                      const iconName = 
+                        stall.type === "TACOS" ? "fastfood" :
+                        stall.type === "BURGERS" ? "lunch_dining" :
+                        stall.type === "PIZZA" ? "local_pizza" : "local_bar";
 
                       return (
-                        <div key={stall.id} className={`p-2.5 border rounded-lg transition-all ${
-                          isStallRouted ? "border-primary bg-primary/5 animate-pulse-glow-primary" : "border-outline-variant/30 bg-surface"
+                        <div key={stall.id} className={`p-3 border rounded-lg transition-all ${
+                          isStallRouted ? "border-primary bg-primary/5 shadow-sm" : "border-outline-variant/30 bg-surface"
                         }`}>
                           <div className="flex justify-between items-start">
-                            <div>
-                              <span className="text-xs font-bold text-on-surface block select-none">{icon} {stall.name}</span>
-                              <span className="text-[9px] font-mono text-outline select-none">{stall.location}</span>
+                            <div className="flex items-start gap-2">
+                              <span className="material-symbols-outlined text-primary text-base shrink-0 mt-0.5">{iconName}</span>
+                              <div>
+                                <span className="text-xs font-bold text-on-surface block select-none uppercase tracking-wide">{stall.name}</span>
+                                <span className="text-[9px] font-mono text-outline select-none">{stall.location}</span>
+                              </div>
                             </div>
                             <div className="text-right">
                               <span className={`text-xs font-mono font-bold block select-none ${waitColor}`}>{stall.waitTime}m wait</span>
-                              <span className="text-[8px] font-mono text-outline uppercase select-none">{stall.status}</span>
+                              <span className="text-[8px] font-mono text-outline uppercase select-none font-bold">{stall.status}</span>
                             </div>
                           </div>
-                          <div className="mt-2.5 flex justify-between items-center">
-                            <span className="text-[8px] font-mono text-outline select-none">Nearest: {stall.nearestGateId.replace("gate_", "Gate ").toUpperCase()}</span>
+                          <div className="mt-3.5 flex justify-between items-center text-[10px]">
+                            <span className="text-[9px] font-mono text-outline select-none">Gate: {stall.nearestGateId.replace("gate_", "").toUpperCase()}</span>
                             <button
                               onClick={() => {
                                 if (isStallRouted) {
@@ -1176,7 +1227,7 @@ export default function App() {
                               }}
                               className={`text-[9px] font-mono font-bold py-1 px-2.5 rounded cursor-pointer transition-all uppercase tracking-wider ${
                                 isStallRouted 
-                                  ? "bg-primary text-white" 
+                                  ? "bg-primary text-white shadow-sm" 
                                   : "bg-surface-container hover:bg-primary/10 text-primary border border-primary/20"
                               }`}
                             >
@@ -1192,7 +1243,7 @@ export default function App() {
 
               {state?.washrooms && (
                 <div className="glass-panel rounded-xl p-4 bg-surface shadow-sm border border-outline-variant/30 flex flex-col mt-4">
-                  <h4 className="font-mono text-xs text-on-surface uppercase mb-3 flex items-center gap-2 font-bold select-none">
+                  <h4 className="font-orbitron text-xs text-on-surface uppercase mb-3 flex items-center gap-2 font-bold tracking-wider select-none">
                     <span className="material-symbols-outlined text-primary text-base">wc</span>
                     Restroom Facilities
                   </h4>
@@ -1204,22 +1255,25 @@ export default function App() {
                         wc.waitTime < 10 ? "text-status-alert" : "text-status-critical";
 
                       return (
-                        <div key={wc.id} className={`p-2.5 border rounded-lg transition-all ${
-                          isWcRouted ? "border-primary bg-primary/5 animate-pulse-glow-primary" : "border-outline-variant/30 bg-surface"
+                        <div key={wc.id} className={`p-3 border rounded-lg transition-all ${
+                          isWcRouted ? "border-primary bg-primary/5 shadow-sm" : "border-outline-variant/30 bg-surface"
                         }`}>
                           <div className="flex justify-between items-start">
-                            <div>
-                              <span className="text-xs font-bold text-on-surface block select-none">🚻 {wc.name}</span>
-                              <span className="text-[9px] font-mono text-outline select-none">{wc.location}</span>
+                            <div className="flex items-start gap-2">
+                              <span className="material-symbols-outlined text-primary text-base shrink-0 mt-0.5">wc</span>
+                              <div>
+                                <span className="text-xs font-bold text-on-surface block select-none uppercase tracking-wide">{wc.name}</span>
+                                <span className="text-[9px] font-mono text-outline select-none">{wc.location}</span>
+                              </div>
                             </div>
                             <div className="text-right">
                               <span className={`text-xs font-mono font-bold block select-none ${waitColor}`}>{wc.waitTime}m wait</span>
-                              <span className="text-[8px] font-mono text-outline uppercase select-none">{wc.status}</span>
+                              <span className="text-[8px] font-mono text-outline uppercase select-none font-bold">{wc.status}</span>
                             </div>
                           </div>
-                          <div className="mt-2.5 flex justify-between items-center">
+                          <div className="mt-3.5 flex justify-between items-center text-[10px]">
                             <div className="flex items-center gap-2 select-none">
-                              <span className="text-[8px] font-mono text-outline">Nearest: {wc.nearestGateId.replace("gate_", "Gate ").toUpperCase()}</span>
+                              <span className="text-[9px] font-mono text-outline">Gate: {wc.nearestGateId.replace("gate_", "").toUpperCase()}</span>
                               {wc.accessibilityFriendly && (
                                 <span className="material-symbols-outlined text-xs text-primary" title="Accessibility Friendly">accessible</span>
                               )}
@@ -1240,7 +1294,7 @@ export default function App() {
                               }}
                               className={`text-[9px] font-mono font-bold py-1 px-2.5 rounded cursor-pointer transition-all uppercase tracking-wider ${
                                 isWcRouted 
-                                  ? "bg-primary text-white" 
+                                  ? "bg-primary text-white shadow-sm" 
                                   : "bg-surface-container hover:bg-primary/10 text-primary border border-primary/20"
                               }`}
                             >
@@ -1258,7 +1312,10 @@ export default function App() {
             <div className="col-span-12 lg:col-span-8 flex flex-col gap-6 animate-stagger-2">
               <div id="transit-card" className="glass-panel rounded-xl flex flex-col bg-surface overflow-hidden shadow-sm">
                 <div className="p-4 border-b border-outline-variant/30 bg-surface-container-low/50">
-                  <span className="font-mono text-xs uppercase text-on-surface font-bold">Parking &amp; Transit Load</span>
+                  <span className="font-orbitron text-xs uppercase text-on-surface font-bold tracking-wider flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-primary text-base">commute</span>
+                    Terminal Transport &amp; Hub Loadings
+                  </span>
                 </div>
                 
                 <div className="p-4 space-y-3">
@@ -1274,24 +1331,27 @@ export default function App() {
                       <div
                         key={hub.id}
                         onClick={() => selectAssetOnMap(hub.id, hub.name, 'transit', `Transit vehicle frequency has been set to high flow with dynamic metering rules applied.`)}
-                        className={`flex items-center gap-3 p-2 cursor-pointer rounded-lg border transition-all ${
-                          isSelected ? "border-primary bg-surface shadow-sm animate-pulse-glow-primary" : "border-transparent hover:bg-surface-container"
+                        className={`flex items-center gap-4 p-3.5 cursor-pointer rounded-lg border transition-all ${
+                          isSelected ? "border-primary bg-surface shadow-sm animate-pulse-glow-primary bg-surface-container-low" : "border-transparent hover:bg-surface-container-low"
                         }`}
                       >
-                        <span className="material-symbols-outlined text-outline">
+                        <span className="material-symbols-outlined text-primary">
                           {hub.type === "TRAIN" ? "train" :
                            hub.type === "SHUTTLE" ? "airport_shuttle" :
                            hub.type === "RIDESHARE" ? "hail" : "local_parking"}
                         </span>
                         <div className="flex-grow min-w-0">
-                          <p className="font-mono text-[10px] text-on-surface font-medium truncate">{hub.name}</p>
-                          <div className="w-full h-1 bg-surface-container-highest rounded-full mt-1 overflow-hidden">
+                          <div className="flex justify-between items-baseline mb-1">
+                            <p className="font-orbitron text-[10px] text-on-surface font-bold uppercase tracking-wider truncate">{hub.name}</p>
+                            <span className="font-mono text-[9px] text-outline uppercase font-semibold">Wait Time: {hub.avgWaitTime}m</span>
+                          </div>
+                          <div className="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
                             <div className={`h-full ${barColor}`} style={{ width: `${percentage}%` }}></div>
                           </div>
                         </div>
                         <div className="text-right shrink-0">
                           {hub.availableSpaces !== undefined ? (
-                            <span className="font-mono text-xs text-status-go font-bold">{hub.availableSpaces} left</span>
+                            <span className="font-mono text-xs text-status-go font-bold">{hub.availableSpaces.toLocaleString()} spaces</span>
                           ) : (
                             <span className={`font-mono text-xs font-bold ${
                               hub.status === "FLUID" ? "text-status-go" :
@@ -1309,44 +1369,47 @@ export default function App() {
         )}
 
         {activeTab === "incidents" && (
-          <div className="grid grid-cols-12 gap-6 animate-fade-in">
+          <div className="grid grid-cols-12 gap-6">
             {/* Left side - Incidents Response */}
             <div className="col-span-12 lg:col-span-8 flex flex-col gap-6 animate-stagger-1">
               <div id="incidents-card" className="glass-panel rounded-xl flex flex-col bg-surface overflow-hidden border border-outline-variant/30 shadow-sm">
-                <div className="p-4 bg-surface-container-high/60 flex justify-between items-center">
-                  <span className="font-mono text-xs text-on-surface uppercase font-bold">Incident Response</span>
-                  <span className="bg-status-critical px-2 py-0.5 rounded text-[9px] font-bold text-white">
+                <div className="p-4 bg-surface-container-low/50 flex justify-between items-center border-b border-outline-variant/20">
+                  <span className="font-orbitron text-xs text-on-surface uppercase font-bold tracking-wider flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-primary text-base">emergency_share</span>
+                    Tactical Incident Response Desk
+                  </span>
+                  <span className="bg-status-critical/10 text-status-critical border border-status-critical/20 px-2 py-0.5 rounded text-[9px] font-bold font-orbitron">
                     {state?.incidents.filter(i => !i.resolved).length || 0} ACTIVE
                   </span>
                 </div>
                 
                 <div className="p-4 space-y-3">
                   {state?.incidents.length === 0 ? (
-                    <p className="text-xs text-outline text-center py-4">No active incidents.</p>
+                    <p className="text-xs text-outline text-center py-4 font-mono">No active incidents reported.</p>
                   ) : (
                     state?.incidents.map((inc) => (
                       <div
                         key={inc.id}
                         className={`p-3 rounded-lg border transition-all ${
-                          inc.resolved ? "bg-slate-50 border-outline-variant/20 opacity-60" :
-                          inc.severity === "CRITICAL" ? "bg-status-critical/5 border-status-critical/20 animate-pulse-glow-critical" : "bg-status-alert/5 border-status-alert/20 animate-pulse-glow-warning"
+                          inc.resolved ? "bg-surface-container-low border-outline-variant/20 opacity-60" :
+                          inc.severity === "CRITICAL" ? "bg-status-critical/5 border-status-critical/30 animate-pulse-glow-critical" : "bg-status-alert/5 border-status-alert/30 animate-pulse-glow-warning"
                         }`}
                       >
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1.5">
                           <span className={`material-symbols-outlined text-[16px] ${
                             inc.severity === "CRITICAL" ? "text-status-critical" : "text-status-alert"
                           }`}>
                             {inc.severity === "CRITICAL" ? "groups" : "router"}
                           </span>
-                          <span className="font-mono text-xs text-on-surface font-bold truncate">{inc.location}</span>
+                          <span className="font-orbitron text-xs text-on-surface font-bold truncate uppercase tracking-wider">{inc.location}</span>
                         </div>
-                        <p className="text-[10px] text-on-surface-variant mb-2">{inc.description}</p>
+                        <p className="text-[10px] text-on-surface-variant mb-2.5 font-sans leading-relaxed">{inc.description}</p>
                         {!inc.resolved && (
                           <button
                             onClick={() => handleResolveIncident(inc.id, inc.location)}
-                            className="text-[9px] font-bold text-primary uppercase border-b border-primary hover:border-b-2 transition-all"
+                            className="text-[9px] font-bold text-primary uppercase border-b border-primary hover:border-b-2 transition-all cursor-pointer font-mono"
                           >
-                            Resolve Issue
+                            Resolve Incident
                           </button>
                         )}
                       </div>
@@ -1360,30 +1423,30 @@ export default function App() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setShowIncidentForm(true)}
-                        className="flex-1 bg-slate-100 hover:bg-slate-200 border border-outline-variant/50 text-on-surface-variant text-xs py-1.5 rounded-lg transition-colors font-medium flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="flex-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant/50 text-on-surface-variant text-xs py-2 rounded-lg transition-colors font-mono font-bold flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider"
                       >
-                        <span className="material-symbols-outlined text-sm">add_circle</span> Inject Simulated Incident
+                        <span className="material-symbols-outlined text-sm">add_circle</span> Inject Anomaly
                       </button>
                       <button
                         onClick={() => handleToggleEvacuation(!state?.evacuationModeActive)}
-                        className={`flex-1 border text-xs py-1.5 rounded-lg transition-colors font-bold flex items-center justify-center gap-1.5 cursor-pointer ${
+                        className={`flex-1 border text-xs py-2 rounded-lg transition-colors font-mono font-bold flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider ${
                           state?.evacuationModeActive 
                             ? "bg-status-go/10 border-status-go text-status-go hover:bg-status-go/20"
                             : "bg-status-critical/10 border-status-critical text-status-critical hover:bg-status-critical/20"
                         }`}
                       >
                         <span className="material-symbols-outlined text-sm">warning</span>
-                        {state?.evacuationModeActive ? "Clear Evacuation Drill" : "Initiate Evacuation Drill"}
+                        {state?.evacuationModeActive ? "Clear Evacuation Drill" : "Evacuation Drill"}
                       </button>
                     </div>
                   ) : (
-                    <form onSubmit={handleCreateIncident} className="space-y-2 text-xs flex flex-col">
-                      <div className="flex justify-between items-center pb-1 border-b border-outline-variant/20">
-                        <span className="font-bold text-on-surface uppercase tracking-wide">INJECT ANOMALY</span>
+                    <form onSubmit={handleCreateIncident} className="space-y-2.5 text-xs flex flex-col">
+                      <div className="flex justify-between items-center pb-1.5 border-b border-outline-variant/20">
+                        <span className="font-orbitron font-bold text-on-surface uppercase tracking-wider">INJECT ANOMALY</span>
                         <button
                           type="button"
                           onClick={() => setShowIncidentForm(false)}
-                          className="text-outline hover:text-primary font-mono text-[9px]"
+                          className="text-outline hover:text-primary font-mono text-[9px] cursor-pointer"
                         >
                           [CANCEL]
                         </button>
@@ -1391,10 +1454,10 @@ export default function App() {
                       <div>
                         <input
                           type="text"
-                          placeholder="Location: e.g. Gate A ticket booths"
+                          placeholder="Incident Location (e.g. Gate A ticket booths)"
                           value={incidentForm.location}
                           onChange={(e) => setIncidentForm(prev => ({ ...prev, location: e.target.value }))}
-                          className="w-full bg-surface border border-outline-variant/60 rounded px-2 py-1 text-on-surface focus:outline-none focus:border-primary"
+                          className="w-full bg-surface border border-outline-variant/60 rounded px-2 py-1.5 text-on-surface focus:outline-none focus:border-primary font-sans"
                           required
                         />
                       </div>
@@ -1402,7 +1465,7 @@ export default function App() {
                         <select
                           value={incidentForm.severity}
                           onChange={(e) => setIncidentForm(prev => ({ ...prev, severity: e.target.value as any }))}
-                          className="flex-1 bg-surface border border-outline-variant/60 rounded px-1 py-1 text-on-surface focus:outline-none"
+                          className="flex-1 bg-surface border border-outline-variant/60 rounded px-1.5 py-1.5 text-on-surface focus:outline-none font-mono font-bold"
                         >
                           <option value="INFO">INFO</option>
                           <option value="WARNING">WARNING</option>
@@ -1410,7 +1473,7 @@ export default function App() {
                         </select>
                         <button
                           type="submit"
-                          className="bg-primary hover:brightness-110 text-white font-bold py-1 px-3 rounded cursor-pointer shimmer-btn"
+                          className="bg-primary hover:brightness-110 text-white font-bold py-1 px-4 rounded cursor-pointer shimmer-btn font-orbitron uppercase text-[10px] tracking-wider"
                         >
                           Trigger
                         </button>
@@ -1418,10 +1481,10 @@ export default function App() {
                       <div>
                         <input
                           type="text"
-                          placeholder="Impact description..."
+                          placeholder="Impact Description..."
                           value={incidentForm.description}
                           onChange={(e) => setIncidentForm(prev => ({ ...prev, description: e.target.value }))}
-                          className="w-full bg-surface border border-outline-variant/60 rounded px-2 py-1 text-on-surface focus:outline-none focus:border-primary"
+                          className="w-full bg-surface border border-outline-variant/60 rounded px-2 py-1.5 text-on-surface focus:outline-none focus:border-primary font-sans"
                           required
                         />
                       </div>
@@ -1439,21 +1502,21 @@ export default function App() {
         )}
 
         {activeTab === "broadcast" && (
-          <div className="grid grid-cols-12 gap-6 animate-fade-in">
+          <div className="grid grid-cols-12 gap-6">
             {/* Left side - Dynamic Overhead Broadcasts */}
             <div className="col-span-12 lg:col-span-6 flex flex-col gap-6 animate-stagger-1">
               <div id="broadcasts-card" className="glass-panel rounded-xl p-4 bg-surface border border-outline-variant/30 shadow-sm">
-                <h4 className="font-mono text-xs text-on-surface uppercase mb-3 flex items-center gap-2 font-bold">
-                  <span className="material-symbols-outlined text-primary text-base">broadcast_on_home</span>
-                  Overhead Broadcasts
+                <h4 className="font-orbitron text-xs text-on-surface uppercase mb-3 flex items-center gap-2 font-bold tracking-wider">
+                  <span className="material-symbols-outlined text-primary text-base">sensors</span>
+                  Multilingual Dispatch Core
                 </h4>
                 
-                <div className="space-y-3 text-xs">
+                <div className="space-y-3.5 text-xs">
                   <div className="flex gap-2">
                     <select
                       value={broadcastForm.location}
                       onChange={(e) => setBroadcastForm(p => ({ ...p, location: e.target.value }))}
-                      className="flex-1 bg-surface-container-low border border-outline-variant/50 rounded p-1 text-on-surface"
+                      className="flex-1 bg-surface-container border border-outline-variant/50 rounded p-1.5 text-on-surface font-sans"
                     >
                       <option value="Gate C Plaza Entrance">Gate C Main Gate</option>
                       <option value="North Rail Ingress stairs">North Rail Station</option>
@@ -1463,7 +1526,7 @@ export default function App() {
                     <select
                       value={broadcastForm.urgency}
                       onChange={(e) => setBroadcastForm(p => ({ ...p, urgency: e.target.value }))}
-                      className="bg-surface-container-low border border-outline-variant/50 rounded p-1 text-on-surface font-mono"
+                      className="bg-surface-container border border-outline-variant/50 rounded p-1.5 text-on-surface font-mono font-bold"
                     >
                       <option value="NORMAL">NORMAL</option>
                       <option value="HIGH">HIGH</option>
@@ -1474,30 +1537,30 @@ export default function App() {
                     type="text"
                     value={broadcastForm.description}
                     onChange={(e) => setBroadcastForm(p => ({ ...p, description: e.target.value }))}
-                    placeholder="Ticket scanner slows down..."
-                    className="w-full bg-surface-container-low border border-outline-variant/50 rounded p-1.5 text-on-surface"
+                    placeholder="Describe issue (e.g. Ticket scanner slows down...)"
+                    className="w-full bg-surface-container border border-outline-variant/50 rounded p-2 text-on-surface font-sans"
                   />
                   <button
                     onClick={handleDraftAnnouncement}
                     disabled={draftingAnnouncement}
-                    className="w-full py-2 bg-primary/10 border border-primary/20 text-primary rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-primary/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shimmer-btn"
+                    className="w-full py-2.5 bg-primary/10 border border-primary/20 text-primary rounded-lg text-[10px] font-bold font-orbitron uppercase tracking-widest hover:bg-primary/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shimmer-btn"
                   >
                     <span className="material-symbols-outlined text-sm">smart_toy</span>
-                    {draftingAnnouncement ? "Drafting..." : "Draft with Gemini"}
+                    {draftingAnnouncement ? "Drafting..." : "Draft with Gemini AI"}
                   </button>
 
                   {announcementDraft && (
-                    <div className="bg-slate-50 border border-outline-variant/40 p-2.5 rounded-lg text-[10px] animate-fade-in space-y-2 mt-2">
-                      <div className="flex justify-between items-center pb-1 border-b border-outline-variant/20">
-                        <span className="font-bold text-primary uppercase">DRAFT NOTICE</span>
-                        <span className="text-[8px] text-outline">{announcementDraft.languages.join(", ")}</span>
+                    <div className="bg-surface-container border border-outline-variant/40 p-3 rounded-lg text-[10px] animate-fade-in space-y-2 mt-2 font-mono">
+                      <div className="flex justify-between items-center pb-1.5 border-b border-outline-variant/20">
+                        <span className="font-bold text-primary uppercase font-orbitron tracking-wider">DRAFT ADVISORY</span>
+                        <span className="text-[8px] text-outline uppercase font-bold">{announcementDraft.languages.join(", ")}</span>
                       </div>
-                      <strong className="text-on-surface block">[{announcementDraft.title}]</strong>
-                      <p className="text-on-surface-variant leading-relaxed max-h-[80px] overflow-y-auto">{announcementDraft.content}</p>
-                      <div className="flex justify-end gap-1.5 pt-1">
-                        <button onClick={() => setAnnouncementDraft(null)} className="text-outline hover:text-on-surface text-[9px]">Discard</button>
-                        <button onClick={() => handleSpeak(announcementDraft.content)} className="bg-slate-100 hover:bg-slate-200 text-on-surface border border-outline-variant/30 px-2 py-0.5 rounded text-[9px] font-bold cursor-pointer">Play Draft</button>
-                        <button onClick={handlePublishAnnouncement} className="bg-primary text-white px-2 py-0.5 rounded text-[9px] font-bold cursor-pointer">Publish</button>
+                      <strong className="text-on-surface block uppercase text-[11px] font-orbitron">[{announcementDraft.title}]</strong>
+                      <p className="text-on-surface-variant leading-relaxed max-h-[100px] overflow-y-auto font-sans text-xs">{announcementDraft.content}</p>
+                      <div className="flex justify-end gap-2 pt-2 border-t border-outline-variant/20">
+                        <button onClick={() => setAnnouncementDraft(null)} className="text-outline hover:text-on-surface text-[9px] font-bold cursor-pointer uppercase font-mono">Discard</button>
+                        <button onClick={() => handleSpeak(announcementDraft.content)} className="bg-surface-container hover:bg-surface-container-high text-on-surface border border-outline-variant/30 px-2.5 py-1 rounded font-bold cursor-pointer text-[9px] uppercase font-mono">Play Voice</button>
+                        <button onClick={handlePublishAnnouncement} className="bg-primary hover:brightness-115 text-white px-2.5 py-1 rounded font-bold cursor-pointer text-[9px] uppercase font-mono">Publish</button>
                       </div>
                     </div>
                   )}
@@ -1508,35 +1571,35 @@ export default function App() {
             {/* Right side - Active Digital Boards stream */}
             <div className="col-span-12 lg:col-span-6 flex flex-col gap-6 animate-stagger-2">
               <div className="glass-panel rounded-xl p-4 bg-surface border border-outline-variant/30 shadow-sm">
-                <h4 className="font-mono text-xs text-on-surface uppercase mb-3 flex items-center gap-2 font-bold">
-                  <span className="material-symbols-outlined text-primary text-base">rss_feed</span>
-                  Active Digital Announcements Board
+                <h4 className="font-orbitron text-xs text-on-surface uppercase mb-3 flex items-center gap-2 font-bold tracking-wider">
+                  <span className="material-symbols-outlined text-primary text-base">ad_units</span>
+                  Active Digital Board Announcements
                 </h4>
                 <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
                   {activeAnnouncements.length === 0 ? (
-                    <p className="text-xs text-outline text-center py-8">No broadcasts active on stadium boards.</p>
+                    <p className="text-xs text-outline text-center py-8 font-mono">No broadcasts active on stadium boards.</p>
                   ) : (
                     activeAnnouncements.map((ann) => (
-                      <div key={ann.id} className="p-3 border border-outline-variant/30 rounded-lg bg-slate-50 font-mono text-xs flex justify-between items-start gap-4">
-                        <div className="space-y-1">
+                      <div key={ann.id} className="p-3 border border-outline-variant/30 rounded-lg bg-surface-container-low font-mono text-xs flex justify-between items-start gap-4 shadow-sm">
+                        <div className="space-y-1.5">
                           <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                            <span className="font-bold text-on-surface">[{ann.title}]</span>
-                            <span className="text-[8px] bg-outline-variant/20 text-outline px-1 rounded uppercase font-bold">{ann.targetAudience}</span>
+                            <span className="w-2 h-2 rounded-full bg-status-critical animate-pulse shadow-[0_0_6px_rgba(239,68,68,0.5)]"></span>
+                            <span className="font-bold text-on-surface uppercase text-[11px] font-orbitron tracking-wide">[{ann.title}]</span>
+                            <span className="text-[8px] bg-outline-variant/20 text-outline px-1 rounded uppercase font-bold border border-outline-variant/20">{ann.targetAudience}</span>
                           </div>
-                          <p className="text-on-surface-variant text-[11px] leading-relaxed">{ann.content}</p>
+                          <p className="text-on-surface-variant text-[11px] leading-relaxed font-sans">{ann.content}</p>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           <button
                             onClick={() => handleSpeak(ann.content)}
-                            className="text-[9px] font-bold text-primary border border-primary/30 hover:bg-primary/10 px-2 py-1 rounded transition-colors"
+                            className="text-[9px] font-bold text-primary border border-primary/30 hover:bg-primary/10 px-2 py-1 rounded transition-colors font-mono cursor-pointer uppercase tracking-wider"
                             title="Play Announcement Speech"
                           >
                             Play
                           </button>
                           <button
                             onClick={() => handleClearAnnouncement(ann.id, ann.title)}
-                            className="text-[9px] font-bold text-status-critical border border-status-critical/30 hover:bg-status-critical/10 px-2 py-1 rounded transition-colors"
+                            className="text-[9px] font-bold text-status-critical border border-status-critical/30 hover:bg-status-critical/10 px-2 py-1 rounded transition-colors font-mono cursor-pointer uppercase tracking-wider"
                           >
                             Clear
                           </button>
@@ -1556,19 +1619,19 @@ export default function App() {
       <div className="fixed bottom-12 right-8 w-80 glass-panel rounded-2xl shadow-2xl border-primary/10 flex flex-col overflow-hidden z-50 bg-surface/95 transition-all">
         <div className="p-3 bg-primary flex justify-between items-center text-white">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-              <span className="material-symbols-outlined text-primary text-[18px]">robot_2</span>
+            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center border border-white/10 shadow-inner">
+              <span className="material-symbols-outlined text-white text-[18px]">smart_toy</span>
             </div>
             <div>
-              <p className="font-mono text-[10px] font-bold leading-none">FIFA VOLUNT-AI</p>
-              <p className="text-[8px] text-white/80 mt-0.5">Tactical Guide Assistant</p>
+              <p className="font-orbitron text-[10px] font-bold leading-none tracking-widest">FIFA VOLUNT-AI</p>
+              <p className="text-[8px] text-white/80 mt-1 font-mono uppercase">Tactical Support Core</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <select
               value={userLanguage}
               onChange={(e) => setUserLanguage(e.target.value)}
-              className="bg-primary/20 text-white rounded text-[9px] border border-white/20 focus:outline-none py-0.5 px-1 font-mono cursor-pointer"
+              className="bg-primary-dark/20 text-white rounded text-[9px] border border-white/25 focus:outline-none py-0.5 px-1.5 font-mono cursor-pointer font-bold"
             >
               <option value="English" className="text-on-surface">EN</option>
               <option value="Spanish" className="text-on-surface">ES</option>
@@ -1577,7 +1640,7 @@ export default function App() {
             </select>
             <button
               onClick={() => setShowAssistant(!showAssistant)}
-              className="text-white/80 hover:text-white transition-colors"
+              className="text-white/80 hover:text-white transition-colors cursor-pointer"
             >
               <span className="material-symbols-outlined text-base">{showAssistant ? "expand_more" : "expand_less"}</span>
             </button>
@@ -1586,7 +1649,7 @@ export default function App() {
 
         {showAssistant && (
           <>
-            <div className="p-4 h-64 overflow-y-auto space-y-3 text-[11px] bg-slate-50/50">
+            <div className="p-4 h-64 overflow-y-auto space-y-3 text-[11px] bg-surface-container-low/40">
               {chatHistory.map((msg) => (
                 <div
                   key={msg.id}
@@ -1594,27 +1657,30 @@ export default function App() {
                     msg.sender === "user"
                       ? "bg-primary/5 border-primary/20 text-on-surface self-end ml-auto"
                       : msg.sender === "system"
-                        ? "bg-slate-100 border-outline-variant/20 text-outline text-[9px] self-center w-full text-center"
+                        ? "bg-surface-container border-outline-variant/30 text-outline text-[9px] self-center w-full text-center rounded-md py-1 font-mono"
                         : "bg-surface border-outline-variant/30 text-on-surface self-start mr-auto"
                   }`}
                 >
-                  <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                  <p className="leading-relaxed whitespace-pre-wrap font-sans">{msg.text}</p>
                   
                   {msg.suggestedRoute && (
-                    <div className="mt-2 pt-1.5 border-t border-outline-variant/30 text-[9px] space-y-1">
-                      <span className="text-primary font-bold block">🚗 Recommended Route ({msg.suggestedRoute.mode}):</span>
-                      <div className="flex flex-wrap items-center gap-1">
+                    <div className="mt-2 pt-2 border-t border-outline-variant/20 text-[9px] space-y-1.5 font-mono">
+                      <span className="text-primary font-bold flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px]">navigation</span>
+                        Route ({msg.suggestedRoute.mode}):
+                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5">
                         {msg.suggestedRoute.path.map((wp, wIdx) => (
                           <span key={wIdx} className="flex items-center gap-1 font-mono">
-                            {wIdx > 0 && <span className="text-outline text-[8px]">»</span>}
-                            <span className="bg-slate-100 border border-outline-variant/30 text-on-surface-variant px-1 rounded">
+                            {wIdx > 0 && <span className="text-outline text-[8px]">&raquo;</span>}
+                            <span className="bg-surface-container border border-outline-variant/30 text-on-surface-variant px-1.5 py-0.5 rounded text-[8px] font-bold">
                               {wp}
                             </span>
                           </span>
                         ))}
                       </div>
-                      <div className="text-[8px] text-outline mt-1 font-mono">
-                        Wait/Transit: <strong className="text-on-surface">{msg.suggestedRoute.travelTime}m</strong>
+                      <div className="text-[8px] text-outline mt-1">
+                        Travel Time: <strong className="text-on-surface font-bold">{msg.suggestedRoute.travelTime}m</strong>
                       </div>
                     </div>
                   )}
@@ -1625,36 +1691,36 @@ export default function App() {
                   <span className="w-1.5 h-1.5 bg-primary rounded-full bounce-dot-1"></span>
                   <span className="w-1.5 h-1.5 bg-primary rounded-full bounce-dot-2"></span>
                   <span className="w-1.5 h-1.5 bg-primary rounded-full bounce-dot-3"></span>
-                  <span className="text-[9px] font-mono text-outline ml-1.5">Grounding real-time routes...</span>
+                  <span className="text-[9px] font-mono text-outline ml-1.5">Generating crowd-smart route...</span>
                 </div>
               )}
               <div ref={chatEndRef} />
             </div>
 
-            <div className="p-2 border-t border-outline-variant/20 bg-slate-50 flex flex-wrap gap-1">
+            <div className="p-2 border-t border-outline-variant/20 bg-surface-container-low flex flex-wrap gap-1">
               <button
                 onClick={() => handleSendChatMessage("How do I bypass the massive Gate C crowd delay?")}
-                className="bg-surface hover:bg-slate-50/10 border border-outline-variant/50 rounded-lg py-0.5 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px]"
+                className="bg-surface hover:bg-surface-container-high border border-outline-variant/50 rounded-lg py-1 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px] font-mono uppercase"
               >
                 Bypass Gate C Wait
               </button>
               <button
                 onClick={() => handleSendChatMessage("I am at South Overflow Parking. How do I get inside?")}
-                className="bg-surface hover:bg-slate-50/10 border border-outline-variant/50 rounded-lg py-0.5 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px]"
+                className="bg-surface hover:bg-surface-container-high border border-outline-variant/50 rounded-lg py-1 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px] font-mono uppercase"
               >
                 Route from Lot H
               </button>
               <button
                 onClick={() => handleSendChatMessage("Where is the nearest food stall and how do I get there?")}
-                className="bg-surface hover:bg-slate-50/10 border border-outline-variant/50 rounded-lg py-0.5 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px]"
+                className="bg-surface hover:bg-surface-container-high border border-outline-variant/50 rounded-lg py-1 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px] font-mono uppercase"
               >
-                🍔 Food Stall Directions
+                Food Stall Route
               </button>
               <button
                 onClick={() => handleSendChatMessage("Where is the nearest washroom facility and how do I get there?")}
-                className="bg-surface hover:bg-slate-50/10 border border-outline-variant/50 rounded-lg py-0.5 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px]"
+                className="bg-surface hover:bg-surface-container-high border border-outline-variant/50 rounded-lg py-1 px-2 text-[9px] text-primary font-semibold transition-all cursor-pointer truncate max-w-[140px] font-mono uppercase"
               >
-                🚻 Washroom Directions
+                Washroom Route
               </button>
             </div>
 
@@ -1662,15 +1728,15 @@ export default function App() {
               <div className="relative flex items-center">
                 <input
                   type="text"
-                  placeholder="Ask for custom route advice..."
+                  placeholder="Ask for crowd-smart routing advice..."
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSendChatMessage(currentMessage)}
-                  className="w-full bg-slate-50 border border-outline-variant/30 rounded-xl py-1.5 pl-3 pr-8 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-surface-container-low border border-outline-variant/30 rounded-xl py-1.5 pl-3 pr-8 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary font-sans"
                 />
                 <button
                   onClick={() => handleSendChatMessage(currentMessage)}
-                  className="absolute right-2 text-primary hover:scale-115 transition-transform cursor-pointer flex items-center justify-center"
+                  className="absolute right-2.5 text-primary hover:scale-110 transition-transform cursor-pointer flex items-center justify-center"
                 >
                   <span className="material-symbols-outlined text-[18px]">send</span>
                 </button>
@@ -1681,13 +1747,13 @@ export default function App() {
       </div>
 
       {/* Footer: Persistent Telemetry Logs */}
-      <footer className="fixed bottom-0 left-0 right-0 h-10 z-50 bg-surface/90 backdrop-blur-md border-t border-outline-variant/30 flex items-center justify-between px-8 shadow-inner" id="main-footer">
+      <footer className="fixed bottom-0 left-0 right-0 h-10 z-40 bg-surface/90 backdrop-blur-md border-t border-outline-variant/30 flex items-center justify-between px-8 shadow-inner" id="main-footer">
         <div className="flex items-center gap-4">
-          <span className="font-mono text-[10px] text-on-surface uppercase tracking-widest flex items-center gap-1.5 font-bold shrink-0">
-            <span className="w-2 h-2 rounded-full bg-status-go animate-pulse"></span>
-            TELEMETRY LIVE
+          <span className="font-orbitron text-[9px] text-on-surface uppercase tracking-widest flex items-center gap-1.5 font-black shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-status-go animate-pulse shadow-[0_0_6px_rgba(16,185,129,0.6)]"></span>
+            Telemetry Stream
           </span>
-          <div className="overflow-hidden whitespace-nowrap w-[400px] md:w-[700px] text-outline text-[10px] font-medium font-mono">
+          <div className="overflow-hidden whitespace-nowrap w-[400px] md:w-[700px] text-outline text-[10px] font-medium font-mono select-none">
             <div className="inline-block animate-marquee whitespace-nowrap">
               {operationLogs.map((log, idx) => (
                 <span key={idx} className="mr-8">» {log}</span>
@@ -1695,8 +1761,8 @@ export default function App() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-6 text-[10px] text-outline shrink-0 font-mono">
-          <span>© 2026 CrowdIQ • Operations Command</span>
+        <div className="flex items-center gap-6 text-[9px] text-outline shrink-0 font-mono uppercase tracking-wider font-bold">
+          <span>CrowdIQ Operations Terminal</span>
         </div>
       </footer>
 

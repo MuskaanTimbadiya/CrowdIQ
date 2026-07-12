@@ -22,9 +22,9 @@ The solution features a rich **Three.js WebGL Tactical Simulator** rendering an 
 
 ## 3. Concourse Navigations & Wayfinding Directories
 The system guides fans through the lower and upper stadium levels with custom routes:
-*   **🍔 Concessions & Food Directory**: Displays live wait times and nearest gate access for food stalls (🌮 Tacos, 🍔 Burgers, 🍕 Pizza, 🍺 Bar). Clicking "Navigate" highlights an **orange dashed path** in 3D WebGL with streaming orange particles flowing from the gate.
-*   **🚻 Restroom & WC Directory**: Tracks restroom occupancy levels and wait times. Clicking "Navigate" renders a **purple dashed path** in 3D WebGL with streaming purple particles to the facility, detailing accessibility features.
-*   **💬 Chatbot Waypoint Interceptor**: The Volunt-AI chatbot intercepts concession and washroom queries locally, automatically triggering tab transitions and generating walking-route paths on the 3D map.
+*   **Concessions & Food Directory**: Displays live wait times and nearest gate access for food stalls (Tacos, Burgers, Pizza, Bar). Clicking "Navigate" highlights an **orange dashed path** in 3D WebGL with streaming orange particles flowing from the gate.
+*   **Restroom & WC Directory**: Tracks restroom occupancy levels and wait times. Clicking "Navigate" renders a **purple dashed path** in 3D WebGL with streaming purple particles to the facility, detailing accessibility features.
+*   **Chatbot Waypoint Interceptor**: The Volunt-AI chatbot intercepts concession and washroom queries locally, automatically triggering tab transitions and generating walking-route paths on the 3D map.
 
 ---
 

@@ -1319,173 +1319,183 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
           {/* Rail Hub */}
           <div
             ref={(el) => { if (el) labelsRef.current.set("rail", el); }}
-            className="absolute bg-surface/90 border border-outline-variant/40 text-on-surface font-sans text-[10px] font-bold px-1.5 py-0.5 rounded-full transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md"
+            className={`absolute border text-[8px] font-mono font-bold px-2 py-1 rounded-md transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md transition-all duration-300 z-20 ${
+              selectedTransitRoute?.startId === "rail" || selectedAssetId === "rail_transit"
+                ? "bg-cyan-600 border-cyan-400 text-white shadow-[0_0_10px_rgba(6,182,212,0.6)] animate-pulse"
+                : "bg-surface/85 backdrop-blur-md border-outline-variant/30 text-on-surface hover:bg-surface hover:border-cyan-500/40"
+            }`}
           >
-            🚊 RAIL
+            RAIL STN
           </div>
           {/* Shuttle Hub */}
           <div
             ref={(el) => { if (el) labelsRef.current.set("shuttle", el); }}
-            className="absolute bg-surface/90 border border-outline-variant/40 text-on-surface font-sans text-[10px] font-bold px-1.5 py-0.5 rounded-full transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md"
+            className={`absolute border text-[8px] font-mono font-bold px-2 py-1 rounded-md transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md transition-all duration-300 z-20 ${
+              selectedTransitRoute?.startId === "shuttle" || selectedAssetId === "shuttle_bus"
+                ? "bg-cyan-600 border-cyan-400 text-white shadow-[0_0_10px_rgba(6,182,212,0.6)] animate-pulse"
+                : "bg-surface/85 backdrop-blur-md border-outline-variant/30 text-on-surface hover:bg-surface hover:border-cyan-500/40"
+            }`}
           >
-            🚌 SHUTTLE
+            SHUTTLE HUB
           </div>
 
           {/* Exits Labels */}
           <div
             ref={(el) => { if (el) labelsRef.current.set("exit_1", el); }}
-            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
+            className={`absolute border text-[8px] font-mono font-bold px-2 py-1 rounded-md transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md transition-all duration-300 z-20 ${
               evacuationModeActive 
-                ? "bg-emerald-600 border-emerald-400 text-white animate-pulse" 
-                : "bg-surface-container-low/90 border-outline-variant/30 text-outline"
+                ? "bg-emerald-600 border-emerald-400 text-white shadow-[0_0_10px_rgba(16,185,129,0.6)] animate-pulse" 
+                : "bg-surface/85 backdrop-blur-md border-outline-variant/30 text-outline hover:bg-surface"
             }`}
           >
-            {evacuationModeActive ? "🚨 EXIT 1 (ACTIVE)" : "EXIT 1"}
+            {evacuationModeActive ? "EXIT 1 (ACTIVE)" : "EXIT 1"}
           </div>
           <div
             ref={(el) => { if (el) labelsRef.current.set("exit_2", el); }}
-            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
+            className={`absolute border text-[8px] font-mono font-bold px-2 py-1 rounded-md transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md transition-all duration-300 z-20 ${
               evacuationModeActive 
-                ? "bg-emerald-600 border-emerald-400 text-white animate-pulse" 
-                : "bg-surface-container-low/90 border-outline-variant/30 text-outline"
+                ? "bg-emerald-600 border-emerald-400 text-white shadow-[0_0_10px_rgba(16,185,129,0.6)] animate-pulse" 
+                : "bg-surface/85 backdrop-blur-md border-outline-variant/30 text-outline hover:bg-surface"
             }`}
           >
-            {evacuationModeActive ? "🚨 EXIT 2 (ACTIVE)" : "EXIT 2"}
+            {evacuationModeActive ? "EXIT 2 (ACTIVE)" : "EXIT 2"}
           </div>
           <div
             ref={(el) => { if (el) labelsRef.current.set("exit_3", el); }}
-            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
+            className={`absolute border text-[8px] font-mono font-bold px-2 py-1 rounded-md transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md transition-all duration-300 z-20 ${
               evacuationModeActive 
-                ? "bg-emerald-600 border-emerald-400 text-white animate-pulse" 
-                : "bg-surface-container-low/90 border-outline-variant/30 text-outline"
+                ? "bg-emerald-600 border-emerald-400 text-white shadow-[0_0_10px_rgba(16,185,129,0.6)] animate-pulse" 
+                : "bg-surface/85 backdrop-blur-md border-outline-variant/30 text-outline hover:bg-surface"
             }`}
           >
-            {evacuationModeActive ? "🚨 EXIT 3 (ACTIVE)" : "EXIT 3"}
+            {evacuationModeActive ? "EXIT 3 (ACTIVE)" : "EXIT 3"}
           </div>
           <div
             ref={(el) => { if (el) labelsRef.current.set("exit_4", el); }}
-            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
+            className={`absolute border text-[8px] font-mono font-bold px-2 py-1 rounded-md transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md transition-all duration-300 z-20 ${
               evacuationModeActive 
-                ? "bg-emerald-600 border-emerald-400 text-white animate-pulse" 
-                : "bg-surface-container-low/90 border-outline-variant/30 text-outline"
+                ? "bg-emerald-600 border-emerald-400 text-white shadow-[0_0_10px_rgba(16,185,129,0.6)] animate-pulse" 
+                : "bg-surface/85 backdrop-blur-md border-outline-variant/30 text-outline hover:bg-surface"
             }`}
           >
-            {evacuationModeActive ? "🚨 EXIT 4 (ACTIVE)" : "EXIT 4"}
+            {evacuationModeActive ? "EXIT 4 (ACTIVE)" : "EXIT 4"}
           </div>
+          
           {/* Food Stall Labels */}
           <div
             ref={(el) => { if (el) labelsRef.current.set("stall_1", el); }}
-            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
-              selectedFoodStallRoute?.stallId === "stall_1"
-                ? "bg-orange-600 border-orange-400 text-white animate-pulse"
-                : "bg-surface-container-low/95 border-orange-500/20 text-orange-500 hover:bg-orange-50/10"
+            className={`absolute border text-[8px] font-mono font-bold px-2 py-1 rounded-md transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md transition-all duration-300 z-20 ${
+              selectedFoodStallRoute?.stallId === "stall_1" || selectedAssetId === "stall_1"
+                ? "bg-orange-600 border-orange-400 text-white shadow-[0_0_10px_rgba(249,115,22,0.6)] animate-pulse"
+                : "bg-surface/85 backdrop-blur-md border-orange-500/20 text-orange-500 hover:bg-surface hover:border-orange-500/50"
             }`}
           >
-            🌮 TACOS
+            TACO STAND
           </div>
           <div
             ref={(el) => { if (el) labelsRef.current.set("stall_2", el); }}
-            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
-              selectedFoodStallRoute?.stallId === "stall_2"
-                ? "bg-orange-600 border-orange-400 text-white animate-pulse"
-                : "bg-surface-container-low/95 border-yellow-500/20 text-yellow-600 hover:bg-yellow-50/10"
+            className={`absolute border text-[8px] font-mono font-bold px-2 py-1 rounded-md transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md transition-all duration-300 z-20 ${
+              selectedFoodStallRoute?.stallId === "stall_2" || selectedAssetId === "stall_2"
+                ? "bg-orange-600 border-orange-400 text-white shadow-[0_0_10px_rgba(249,115,22,0.6)] animate-pulse"
+                : "bg-surface/85 backdrop-blur-md border-yellow-500/20 text-yellow-500 hover:bg-surface hover:border-yellow-500/50"
             }`}
           >
-            🍔 BURGERS
+            BURGER GRILL
           </div>
           <div
             ref={(el) => { if (el) labelsRef.current.set("stall_3", el); }}
-            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
-              selectedFoodStallRoute?.stallId === "stall_3"
-                ? "bg-orange-600 border-orange-400 text-white animate-pulse"
-                : "bg-surface-container-low/95 border-red-500/20 text-red-500 hover:bg-red-50/10"
+            className={`absolute border text-[8px] font-mono font-bold px-2 py-1 rounded-md transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md transition-all duration-300 z-20 ${
+              selectedFoodStallRoute?.stallId === "stall_3" || selectedAssetId === "stall_3"
+                ? "bg-orange-600 border-orange-400 text-white shadow-[0_0_10px_rgba(249,115,22,0.6)] animate-pulse"
+                : "bg-surface/85 backdrop-blur-md border-red-500/20 text-red-500 hover:bg-surface hover:border-red-500/50"
             }`}
           >
-            🍕 PIZZA
+            PIZZA KITCHEN
           </div>
           <div
             ref={(el) => { if (el) labelsRef.current.set("stall_4", el); }}
-            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
-              selectedFoodStallRoute?.stallId === "stall_4"
-                ? "bg-orange-600 border-orange-400 text-white animate-pulse"
-                : "bg-surface-container-low/95 border-blue-500/20 text-blue-500 hover:bg-blue-50/10"
+            className={`absolute border text-[8px] font-mono font-bold px-2 py-1 rounded-md transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md transition-all duration-300 z-20 ${
+              selectedFoodStallRoute?.stallId === "stall_4" || selectedAssetId === "stall_4"
+                ? "bg-orange-600 border-orange-400 text-white shadow-[0_0_10px_rgba(249,115,22,0.6)] animate-pulse"
+                : "bg-surface/85 backdrop-blur-md border-blue-500/20 text-blue-500 hover:bg-surface hover:border-blue-500/50"
             }`}
           >
-            🍺 BAR
+            BEER TAVERN
           </div>
 
           {/* Washroom Labels */}
           <div
             ref={(el) => { if (el) labelsRef.current.set("wc_1", el); }}
-            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
-              selectedWashroomRoute?.washroomId === "wc_1"
-                ? "bg-purple-600 border-purple-400 text-white animate-pulse"
-                : "bg-surface-container-low/95 border-purple-500/20 text-purple-500 hover:bg-purple-50/10"
+            className={`absolute border text-[8px] font-mono font-bold px-2 py-1 rounded-md transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md transition-all duration-300 z-20 ${
+              selectedWashroomRoute?.washroomId === "wc_1" || selectedAssetId === "wc_1"
+                ? "bg-purple-600 border-purple-400 text-white shadow-[0_0_10px_rgba(147,51,234,0.6)] animate-pulse"
+                : "bg-surface/85 backdrop-blur-md border-purple-500/20 text-purple-500 hover:bg-surface hover:border-purple-500/50"
             }`}
           >
-            🚻 WC 1
+            WC NE
           </div>
           <div
             ref={(el) => { if (el) labelsRef.current.set("wc_2", el); }}
-            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
-              selectedWashroomRoute?.washroomId === "wc_2"
-                ? "bg-purple-600 border-purple-400 text-white animate-pulse"
-                : "bg-surface-container-low/95 border-purple-500/20 text-purple-500 hover:bg-purple-50/10"
+            className={`absolute border text-[8px] font-mono font-bold px-2 py-1 rounded-md transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md transition-all duration-300 z-20 ${
+              selectedWashroomRoute?.washroomId === "wc_2" || selectedAssetId === "wc_2"
+                ? "bg-purple-600 border-purple-400 text-white shadow-[0_0_10px_rgba(147,51,234,0.6)] animate-pulse"
+                : "bg-surface/85 backdrop-blur-md border-purple-500/20 text-purple-500 hover:bg-surface hover:border-purple-500/50"
             }`}
           >
-            🚻 WC 2
+            WC SE
           </div>
           <div
             ref={(el) => { if (el) labelsRef.current.set("wc_3", el); }}
-            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
-              selectedWashroomRoute?.washroomId === "wc_3"
-                ? "bg-purple-600 border-purple-400 text-white animate-pulse"
-                : "bg-surface-container-low/95 border-purple-500/20 text-purple-500 hover:bg-purple-50/10"
+            className={`absolute border text-[8px] font-mono font-bold px-2 py-1 rounded-md transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md transition-all duration-300 z-20 ${
+              selectedWashroomRoute?.washroomId === "wc_3" || selectedAssetId === "wc_3"
+                ? "bg-purple-600 border-purple-400 text-white shadow-[0_0_10px_rgba(147,51,234,0.6)] animate-pulse"
+                : "bg-surface/85 backdrop-blur-md border-purple-500/20 text-purple-500 hover:bg-surface hover:border-purple-500/50"
             }`}
           >
-            🚻 WC 3
+            WC SW
           </div>
           <div
             ref={(el) => { if (el) labelsRef.current.set("wc_4", el); }}
-            className={`absolute border text-[8px] font-mono font-bold px-1.5 py-0.5 rounded transform -translate-x-1/2 -translate-y-1/2 select-none shadow-sm transition-all duration-300 z-20 ${
-              selectedWashroomRoute?.washroomId === "wc_4"
-                ? "bg-purple-600 border-purple-400 text-white animate-pulse"
-                : "bg-surface-container-low/95 border-purple-500/20 text-purple-500 hover:bg-purple-50/10"
+            className={`absolute border text-[8px] font-mono font-bold px-2 py-1 rounded-md transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md transition-all duration-300 z-20 ${
+              selectedWashroomRoute?.washroomId === "wc_4" || selectedAssetId === "wc_4"
+                ? "bg-purple-600 border-purple-400 text-white shadow-[0_0_10px_rgba(147,51,234,0.6)] animate-pulse"
+                : "bg-surface/85 backdrop-blur-md border-purple-500/20 text-purple-500 hover:bg-surface hover:border-purple-500/50"
             }`}
           >
-            🚻 WC 4
+            WC NW
           </div>
 
           {/* Gates Labels */}
           <div
             ref={(el) => { if (el) labelsRef.current.set("gate_a", el); }}
-            className="absolute bg-surface-container/95 border border-outline-variant/50 text-on-surface font-mono text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md"
+            className="absolute bg-surface-container/95 border border-outline-variant/50 text-on-surface font-mono text-[9px] font-bold w-5 h-5 rounded-md flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md"
           >
             A
           </div>
           <div
             ref={(el) => { if (el) labelsRef.current.set("gate_b", el); }}
-            className="absolute bg-surface-container/95 border border-outline-variant/50 text-on-surface font-mono text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md"
+            className="absolute bg-surface-container/95 border border-outline-variant/50 text-on-surface font-mono text-[9px] font-bold w-5 h-5 rounded-md flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md"
           >
             B
           </div>
           <div
             ref={(el) => { if (el) labelsRef.current.set("gate_c", el); }}
-            className="absolute bg-surface-container/95 border border-outline-variant/50 text-on-surface font-mono text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md"
+            className="absolute bg-surface-container/95 border border-outline-variant/50 text-on-surface font-mono text-[9px] font-bold w-5 h-5 rounded-md flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md"
           >
             C
           </div>
           <div
             ref={(el) => { if (el) labelsRef.current.set("gate_d", el); }}
-            className="absolute bg-surface-container/95 border border-outline-variant/50 text-on-surface font-mono text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md"
+            className="absolute bg-surface-container/95 border border-outline-variant/50 text-on-surface font-mono text-[9px] font-bold w-5 h-5 rounded-md flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 select-none shadow-md"
           >
             D
           </div>
         </div>
 
+
         {/* 3D Interaction Guideline overlay */}
         <div className="absolute bottom-2 right-2 bg-surface-dim/80 backdrop-blur-sm border border-outline-variant/20 rounded px-2 py-0.5 text-[8px] font-mono text-outline pointer-events-none select-none shadow">
-          🖱️ Left click + Drag to rotate • Right click + Drag to pan • Scroll to zoom
+          Left click + Drag to rotate • Right click + Drag to pan • Scroll to zoom
         </div>
       </div>
 

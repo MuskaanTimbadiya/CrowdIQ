@@ -24,7 +24,7 @@ app.use(express.json());
 // Support Vercel serverless function routing where the '/api' prefix might be stripped.
 // Prepend '/api' to incoming request paths if they lack it, to ensure route matching.
 app.use((req, res, next) => {
-  if (!req.url.startsWith('/api') && !req.url.includes('.') && req.url !== '/') {
+  if (!req.url.startsWith('/api') && !req.url.startsWith('/@') && !req.url.includes('.') && req.url !== '/') {
     req.url = '/api' + req.url;
   }
   next();

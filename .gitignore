@@ -7,3 +7,6 @@ coverage/
 .env*
 
 .vercel/
+
+# Antigravity agent skills
+.agents/skills/
