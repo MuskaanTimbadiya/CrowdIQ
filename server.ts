@@ -2,6 +2,21 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import { publicLimiter, apiLimiter } from "./api/rateLimiter";
+import {
+  validateRequest,
+  phaseSchema,
+  resolveIncidentSchema,
+  createIncidentSchema,
+  applyOptimizationSchema,
+  aiOptimizeSchema,
+  aiGuidanceSchema,
+  aiBroadcastDraftSchema,
+  publishBroadcastSchema,
+  clearBroadcastSchema,
+  weatherSchema,
+  evacuationSchema,
+  redeployStaffSchema
+} from "./api/validation";
 import { GoogleGenAI, Type } from "@google/genai";
 import {
   SimulationState,
@@ -529,7 +544,7 @@ app.get("/api/state", publicLimiter, (req, res) => {
 app.use("/api", apiLimiter);
 
 // 2. Trigger Simulation Phase Update
-app.post("/api/state/phase", (req, res) => {
+app.post("/api/state/phase", validateRequest(phaseSchema), (req, res) => {
   const { phase, stadiumId } = req.body;
   if (stadiumId && stadiums[stadiumId]) {
     currentStadiumId = stadiumId;
@@ -634,7 +649,7 @@ app.post("/api/state/phase", (req, res) => {
 });
 
 // 3. Resolve an Incident
-app.post("/api/incidents/resolve", (req, res) => {
+app.post("/api/incidents/resolve", validateRequest(resolveIncidentSchema), (req, res) => {
   const { id } = req.body;
   if (typeof id !== "string") {
     return res.status(400).json({ error: "Invalid incident ID format" });
@@ -666,7 +681,7 @@ app.post("/api/incidents/resolve", (req, res) => {
 });
 
 // 4. Create manual incident
-app.post("/api/incidents", (req, res) => {
+app.post("/api/incidents", validateRequest(createIncidentSchema), (req, res) => {
   const { location, severity, description } = req.body;
   
   if (location && typeof location !== "string") {
@@ -700,7 +715,7 @@ app.post("/api/incidents", (req, res) => {
 });
 
 // 5. Apply an optimization action
-app.post("/api/optimizations/apply", (req, res) => {
+app.post("/api/optimizations/apply", validateRequest(applyOptimizationSchema), (req, res) => {
   const { id } = req.body;
   if (typeof id !== "string") {
     return res.status(400).json({ error: "Invalid optimization ID format" });
@@ -759,7 +774,7 @@ app.post("/api/optimizations/apply", (req, res) => {
 });
 
 // 6. Gemini-powered dynamic overall analysis and generation of custom operational adjustments
-app.post("/api/ai/optimize", async (req, res) => {
+app.post("/api/ai/optimize", validateRequest(aiOptimizeSchema), async (req, res) => {
   if (!ai) {
     // Return standard mock optimization list as fallback
     const mockOptimizations: OptimizationAction[] = [
@@ -871,7 +886,7 @@ app.post("/api/ai/optimize", async (req, res) => {
 });
 
 // 7. Gemini-powered Multilingual Fan Guidance Chat Bot
-app.post("/api/ai/guidance", async (req, res) => {
+app.post("/api/ai/guidance", validateRequest(aiGuidanceSchema), async (req, res) => {
   const { message, chatHistory, userLanguage = "English" } = req.body;
 
   if (typeof message !== "string" || !message.trim()) {
@@ -1016,7 +1031,7 @@ app.post("/api/ai/guidance", async (req, res) => {
 });
 
 // 8. Generate dynamic broadcast overhead announcement draft using Gemini
-app.post("/api/ai/broadcast-draft", async (req, res) => {
+app.post("/api/ai/broadcast-draft", validateRequest(aiBroadcastDraftSchema), async (req, res) => {
   const { incidentLocation, incidentDescription, urgency = "HIGH" } = req.body;
 
   if (incidentLocation && typeof incidentLocation !== "string") {
@@ -1119,7 +1134,7 @@ app.post("/api/ai/broadcast-draft", async (req, res) => {
 });
 
 // 9. Post / Publish a broadcast announcement to the digital boards
-app.post("/api/broadcast/publish", (req, res) => {
+app.post("/api/broadcast/publish", validateRequest(publishBroadcastSchema), (req, res) => {
   const { announcement } = req.body;
   if (announcement) {
     const published: Announcement = {
@@ -1136,7 +1151,7 @@ app.post("/api/broadcast/publish", (req, res) => {
 });
 
 // 10. Clear/Deactivate a broadcast
-app.post("/api/broadcast/clear", (req, res) => {
+app.post("/api/broadcast/clear", validateRequest(clearBroadcastSchema), (req, res) => {
   const { id } = req.body;
   activeAnnouncements = activeAnnouncements.map(ann => {
     if (ann.id === id) {
@@ -1149,7 +1164,7 @@ app.post("/api/broadcast/clear", (req, res) => {
 
 
 // 11. Update Weather Condition
-app.post("/api/state/weather", (req, res) => {
+app.post("/api/state/weather", validateRequest(weatherSchema), (req, res) => {
   const { weather } = req.body;
   if (!["SUNNY", "RAINY", "LIGHTNING_STORM"].includes(weather)) {
     return res.status(400).json({ error: "Invalid weather condition" });
@@ -1160,7 +1175,7 @@ app.post("/api/state/weather", (req, res) => {
 });
 
 // 12. Toggle Evacuation drill mode
-app.post("/api/state/evacuation", (req, res) => {
+app.post("/api/state/evacuation", validateRequest(evacuationSchema), (req, res) => {
   const { active } = req.body;
   if (typeof active !== "boolean") {
     return res.status(400).json({ error: "Invalid active parameter" });
@@ -1191,7 +1206,7 @@ app.post("/api/state/evacuation", (req, res) => {
 });
 
 // 13. Redeploy volunteer staff to gates
-app.post("/api/staff/redeploy", (req, res) => {
+app.post("/api/staff/redeploy", validateRequest(redeployStaffSchema), (req, res) => {
   const { gateId, change } = req.body;
   if (typeof gateId !== "string" || typeof change !== "number") {
     return res.status(400).json({ error: "Invalid parameters" });
