@@ -1,4 +1,6 @@
 import express from "express";
+import helmet from "helmet";
+import compression from "compression";
 import path from "path";
 import dotenv from "dotenv";
 import { publicLimiter, apiLimiter } from "./src/server-utils/rateLimiter.js";
@@ -35,6 +37,8 @@ import {
 dotenv.config();
 
 const app = express();
+app.use(helmet());
+app.use(compression());
 app.set("trust proxy", 1); // Trust first proxy for rate limiting (Vercel/Render)
 app.use(express.json());
 

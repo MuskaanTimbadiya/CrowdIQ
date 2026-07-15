@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import {
   SimulationState,
   GateStatus,
@@ -9,7 +9,8 @@ import {
   ChatMessage,
   Announcement
 } from "./types";
-import { StadiumMap } from "./components/StadiumMap";
+import { TelemetryFooter } from "./components/TelemetryFooter";
+const StadiumMap = React.lazy(() => import("./components/StadiumMap").then(m => ({ default: m.StadiumMap })));
 
 export default function App() {
   // Core states
@@ -1001,20 +1002,29 @@ export default function App() {
             {/* Middle Column (Lg: 8): Map & Roads */}
             <div className="col-span-12 lg:col-span-8 flex flex-col gap-6 animate-stagger-1" id="main-map-column">
               {state && (
-                <StadiumMap
-                  gates={state.gates}
-                  transit={state.transit}
-                  roads={state.roads}
-                  incidents={state.incidents}
-                  selectedAssetId={selectedAssetId}
-                  onSelectAsset={selectAssetOnMap}
-                  evacuationModeActive={state.evacuationModeActive}
-                  foodStalls={state.foodStalls}
-                  selectedFoodStallRoute={selectedFoodStallRoute}
-                  washrooms={state.washrooms}
-                  selectedWashroomRoute={selectedWashroomRoute}
-                  selectedTransitRoute={selectedTransitRoute}
-                />
+                <Suspense fallback={
+                  <div className="bg-surface/50 border border-outline-variant/30 rounded-2xl flex items-center justify-center" style={{ height: "600px" }}>
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
+                      <span className="font-orbitron text-sm text-outline tracking-wider">INITIALIZING 3D ENGINE...</span>
+                    </div>
+                  </div>
+                }>
+                  <StadiumMap
+                    gates={state.gates}
+                    transit={state.transit}
+                    roads={state.roads}
+                    incidents={state.incidents}
+                    selectedAssetId={selectedAssetId}
+                    onSelectAsset={selectAssetOnMap}
+                    evacuationModeActive={state.evacuationModeActive}
+                    foodStalls={state.foodStalls}
+                    selectedFoodStallRoute={selectedFoodStallRoute}
+                    washrooms={state.washrooms}
+                    selectedWashroomRoute={selectedWashroomRoute}
+                    selectedTransitRoute={selectedTransitRoute}
+                  />
+                </Suspense>
               )}
               {/* Access Roadways & Congestion */}
               <div>
@@ -1673,8 +1683,8 @@ export default function App() {
               >
                 <option value="English" className="text-on-surface">EN</option>
                 <option value="Spanish" className="text-on-surface">ES</option>
-                <option value="Portuguese" className="text-on-surface">PT</option>
                 <option value="French" className="text-on-surface">FR</option>
+                <option value="Portuguese" className="text-on-surface">PT</option>
               </select>
               <button
                 onClick={() => setShowAssistant(false)}
@@ -1685,7 +1695,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="p-4 h-64 overflow-y-auto space-y-3 text-[11px] bg-surface-container-low/40">
+          <div aria-live="polite" className="p-4 h-64 overflow-y-auto space-y-3 text-[11px] bg-surface-container-low/40">
             {chatHistory.map((msg) => (
               <div
                 key={msg.id}
@@ -1782,24 +1792,7 @@ export default function App() {
       )}
 
       {/* Footer: Persistent Telemetry Logs */}
-      <footer className="fixed bottom-0 left-0 right-0 h-10 z-40 bg-surface/90 backdrop-blur-md border-t border-outline-variant/30 flex items-center justify-between px-8 shadow-inner" id="main-footer">
-        <div className="flex items-center gap-4">
-          <span className="font-orbitron text-[9px] text-on-surface uppercase tracking-widest flex items-center gap-1.5 font-black shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-status-go animate-pulse shadow-[0_0_6px_rgba(16,185,129,0.6)]"></span>
-            Telemetry Stream
-          </span>
-          <div className="overflow-hidden whitespace-nowrap w-[400px] md:w-[700px] text-outline text-[10px] font-medium font-mono select-none">
-            <div className="inline-block animate-marquee whitespace-nowrap">
-              {operationLogs.map((log, idx) => (
-                <span key={idx} className="mr-8">» {log}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-6 text-[9px] text-outline shrink-0 font-mono uppercase tracking-wider font-bold">
-          <span>CrowdIQ Operations Terminal</span>
-        </div>
-      </footer>
+      <TelemetryFooter operationLogs={operationLogs} />
 
     </div>
   );

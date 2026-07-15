@@ -179,6 +179,48 @@ async function runTests() {
         console.log("✅ Test 11 Passed: POST /api/staff/redeploy successfully updated staff counts.");
       });
 
+      // Test 12: POST /api/broadcast/publish
+      await assertResponse(`http://localhost:${PORT}/api/broadcast/publish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          announcement: {
+            id: "test-ann-1",
+            title: "Evacuation Drill",
+            content: "Attention: Evacuation drill in progress.",
+            targetAudience: "ALL_FANS",
+            priority: "URGENT",
+            languages: ["English"],
+            broadcastActive: true,
+            timestamp: new Date().toISOString()
+          }
+        })
+      }, (data, status) => {
+        if (status !== 200) throw new Error(`POST /api/broadcast/publish returned ${status}`);
+        const activeAnnouncements = data.activeAnnouncements;
+        if (!activeAnnouncements || activeAnnouncements.length === 0 || activeAnnouncements[0].content !== "Attention: Evacuation drill in progress.") {
+          throw new Error("POST /api/broadcast/publish failed to publish announcement");
+        }
+        console.log("✅ Test 12 Passed: POST /api/broadcast/publish successfully published announcement.");
+      });
+
+      // Test 13: POST /api/broadcast/clear
+      const stateForId = await (await fetch(`http://localhost:${PORT}/api/state`)).json();
+      const annId = stateForId.activeAnnouncements[0].id;
+      
+      await assertResponse(`http://localhost:${PORT}/api/broadcast/clear`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: annId })
+      }, (data, status) => {
+         if (status !== 200) throw new Error(`POST /api/broadcast/clear returned ${status}`);
+         const clearedAnn = data.activeAnnouncements.find((a: any) => a.id === annId);
+         if (clearedAnn && clearedAnn.broadcastActive === true) {
+           throw new Error("POST /api/broadcast/clear failed to clear announcement (broadcastActive still true)");
+         }
+         console.log("✅ Test 13 Passed: POST /api/broadcast/clear successfully cleared announcement.");
+      });
+
       console.log("\n🎉 ALL CrowdIQ API INTEGRATION TESTS PASSED SUCCESSFULLY!");
       server.close();
       process.exit(0);
