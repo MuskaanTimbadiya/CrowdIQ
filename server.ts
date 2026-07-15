@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
-import { publicLimiter, apiLimiter } from "./api/rateLimiter";
+import { publicLimiter, apiLimiter } from "./src/server-utils/rateLimiter.js";
 import {
   validateRequest,
   phaseSchema,
@@ -16,7 +16,7 @@ import {
   weatherSchema,
   evacuationSchema,
   redeployStaffSchema
-} from "./api/validation";
+} from "./src/server-utils/validation.js";
 import { GoogleGenAI, Type } from "@google/genai";
 import {
   SimulationState,
@@ -30,7 +30,7 @@ import {
   WeatherCondition,
   FoodStall,
   Washroom
-} from "./src/types";
+} from "./src/types.js";
 
 dotenv.config();
 
