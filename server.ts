@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
+import { publicLimiter, apiLimiter } from "./api/rateLimiter";
 import { GoogleGenAI, Type } from "@google/genai";
 import {
   SimulationState,
@@ -19,6 +20,7 @@ import {
 dotenv.config();
 
 const app = express();
+app.set("trust proxy", 1); // Trust first proxy for rate limiting (Vercel/Render)
 app.use(express.json());
 
 // Support Vercel serverless function routing where the '/api' prefix might be stripped.
@@ -515,13 +517,16 @@ const parseGeminiJson = (rawText: string | undefined | null, fallback: any = {})
 // API Endpoints
 
 // 1. Get Simulation State
-app.get("/api/state", (req, res) => {
+app.get("/api/state", publicLimiter, (req, res) => {
   res.json({
     state,
     activeAnnouncements,
     currentPhase
   });
 });
+
+// Apply apiLimiter to all subsequent API endpoints
+app.use("/api", apiLimiter);
 
 // 2. Trigger Simulation Phase Update
 app.post("/api/state/phase", (req, res) => {
