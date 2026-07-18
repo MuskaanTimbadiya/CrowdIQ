@@ -899,7 +899,7 @@ export default function App() {
               <p className="text-[8px] text-outline font-orbitron uppercase tracking-wider font-bold">Operation Phase</p>
               <select
                 value={currentPhase}
-                onChange={(e) => handlePhaseChange(e.target.value as any)}
+                onChange={(e) => handlePhaseChange(e.target.value as "ingress" | "halftime" | "egress")}
                 className="bg-transparent text-xs text-on-surface font-mono font-bold focus:outline-none cursor-pointer mt-0.5 uppercase w-full"
               >
                 <option value="ingress" className="bg-surface text-on-surface">Ingress</option>
@@ -934,7 +934,7 @@ export default function App() {
               <p className="text-[8px] text-outline font-orbitron uppercase tracking-wider font-bold">Atmosphere</p>
               <select
                 value={state?.weather || "SUNNY"}
-                onChange={(e) => handleUpdateWeather(e.target.value as any)}
+                onChange={(e) => handleUpdateWeather(e.target.value as "SUNNY" | "RAINY" | "LIGHTNING_STORM")}
                 className="bg-transparent text-xs text-on-surface font-mono font-bold focus:outline-none cursor-pointer mt-0.5 w-full"
               >
                 <option value="SUNNY" className="bg-surface text-on-surface">Sunny</option>
@@ -1496,7 +1496,7 @@ export default function App() {
                       <div className="flex gap-2">
                         <select
                           value={incidentForm.severity}
-                          onChange={(e) => setIncidentForm(prev => ({ ...prev, severity: e.target.value as any }))}
+                          onChange={(e) => setIncidentForm(prev => ({ ...prev, severity: e.target.value as "INFO" | "WARNING" | "CRITICAL" }))}
                           className="flex-1 bg-surface border border-outline-variant/60 rounded px-1.5 py-1.5 text-on-surface focus:outline-none font-mono font-bold"
                         >
                           <option value="INFO">INFO</option>
