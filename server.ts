@@ -3,7 +3,7 @@ import helmet from "helmet";
 import compression from "compression";
 import path from "path";
 import dotenv from "dotenv";
-import { publicLimiter, apiLimiter } from "./src/server-utils/rateLimiter.js";
+import { publicLimiter, apiLimiter, aiLimiter } from "./src/server-utils/rateLimiter.js";
 import {
   validateRequest,
   phaseSchema,
@@ -777,7 +777,7 @@ app.post("/api/optimizations/apply", validateRequest(applyOptimizationSchema), (
 });
 
 // 6. Gemini-powered dynamic overall analysis and generation of custom operational adjustments
-app.post("/api/ai/optimize", validateRequest(aiOptimizeSchema), async (_req, res) => {
+app.post("/api/ai/optimize", validateRequest(aiOptimizeSchema), aiLimiter, async (_req, res) => {
   if (!ai) {
     // Return standard mock optimization list as fallback
     const mockOptimizations: OptimizationAction[] = [
@@ -889,7 +889,7 @@ app.post("/api/ai/optimize", validateRequest(aiOptimizeSchema), async (_req, res
 });
 
 // 7. Gemini-powered Multilingual Fan Guidance Chat Bot
-app.post("/api/ai/guidance", validateRequest(aiGuidanceSchema), async (req, res) => {
+app.post("/api/ai/guidance", validateRequest(aiGuidanceSchema), aiLimiter, async (req, res) => {
   const { message, chatHistory, userLanguage = "English" } = req.body;
 
   if (typeof message !== "string" || !message.trim()) {
@@ -1034,7 +1034,7 @@ app.post("/api/ai/guidance", validateRequest(aiGuidanceSchema), async (req, res)
 });
 
 // 8. Generate dynamic broadcast overhead announcement draft using Gemini
-app.post("/api/ai/broadcast-draft", validateRequest(aiBroadcastDraftSchema), async (req, res) => {
+app.post("/api/ai/broadcast-draft", validateRequest(aiBroadcastDraftSchema), aiLimiter, async (req, res) => {
   const { incidentLocation, incidentDescription, urgency = "HIGH" } = req.body;
 
   if (incidentLocation && typeof incidentLocation !== "string") {
@@ -1259,7 +1259,7 @@ const startServer = async () => {
   } else {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get("*", (req, res) => {
+    app.get("*", (_req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
   }

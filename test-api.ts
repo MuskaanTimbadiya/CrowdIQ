@@ -1,10 +1,11 @@
 import app from "./server";
+import { CrowdIncident, OptimizationAction, GateStatus, Announcement } from "./src/types";
 
 const PORT = 3001;
 
-async function assertResponse(url: string, options: RequestInit, assertion: (data: any, status: number) => void) {
+async function assertResponse<T = any>(url: string, options: RequestInit, assertion: (data: T, status: number) => void) {
   const res = await fetch(url, options);
-  const data = await res.json();
+  const data = await res.json() as T;
   assertion(data, res.status);
 }
 
@@ -72,7 +73,7 @@ async function runTests() {
         body: JSON.stringify({ id: incidentToResolve.id })
       }, (data, status) => {
         if (status !== 200) throw new Error(`POST /api/incidents/resolve returned ${status}`);
-        const resolvedInc = data.incidents.find((i: any) => i.id === incidentToResolve.id);
+        const resolvedInc = data.incidents.find((i: CrowdIncident) => i.id === incidentToResolve.id);
         if (!resolvedInc || !resolvedInc.resolved) {
           throw new Error("POST /api/incidents/resolve failed to mark incident as resolved");
         }
@@ -87,7 +88,7 @@ async function runTests() {
         body: JSON.stringify({ id: testOpt.id })
       }, (data, status) => {
         if (status !== 200) throw new Error(`POST /api/optimizations/apply returned ${status}`);
-        const appliedOpt = data.optimizations.find((o: any) => o.id === testOpt.id);
+        const appliedOpt = data.optimizations.find((o: OptimizationAction) => o.id === testOpt.id);
         if (!appliedOpt || !appliedOpt.applied) {
           throw new Error("POST /api/optimizations/apply failed to apply optimization");
         }
@@ -172,7 +173,7 @@ async function runTests() {
         body: JSON.stringify({ gateId: "gate_a", change: 2 })
       }, (data, status) => {
         if (status !== 200) throw new Error(`POST /api/staff/redeploy returned ${status}`);
-        const gate = data.gates.find((g: any) => g.id === "gate_a");
+        const gate = data.gates.find((g: GateStatus) => g.id === "gate_a");
         if (!gate || gate.assignedVolunteers < 2) {
           throw new Error("POST /api/staff/redeploy failed to redeploy volunteers");
         }
@@ -214,7 +215,7 @@ async function runTests() {
         body: JSON.stringify({ id: annId })
       }, (data, status) => {
          if (status !== 200) throw new Error(`POST /api/broadcast/clear returned ${status}`);
-         const clearedAnn = data.activeAnnouncements.find((a: any) => a.id === annId);
+         const clearedAnn = data.activeAnnouncements.find((a: Announcement) => a.id === annId);
          if (clearedAnn && clearedAnn.broadcastActive === true) {
            throw new Error("POST /api/broadcast/clear failed to clear announcement (broadcastActive still true)");
          }
@@ -224,8 +225,8 @@ async function runTests() {
       console.log("\n🎉 ALL CrowdIQ API INTEGRATION TESTS PASSED SUCCESSFULLY!");
       server.close();
       process.exit(0);
-    } catch (err: any) {
-      console.error("\n❌ Test Suite Failed:", err.message || err);
+    } catch (err: unknown) {
+      console.error("\n❌ Test Suite Failed:", (err instanceof Error ? err.message : err));
       server.close();
       process.exit(1);
     }

@@ -24,6 +24,13 @@ export const publicLimiter = rateLimit({
 });
 
 // 2. Looser limits for authenticated API actions (e.g. creating incidents)
+export const aiLimiter = rateLimit({
+  validate: { xForwardedForHeader: false, default: false },
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { error: "Too many AI requests from this IP, please try again later." }
+});
+
 export const apiLimiter = rateLimit({
   validate: { xForwardedForHeader: false, default: false },
   windowMs: getEnvNumber("RATE_LIMIT_API_WINDOW_MS", 15 * 60 * 1000),
@@ -50,7 +57,7 @@ const authBaseDelayMs = getEnvNumber("RATE_LIMIT_AUTH_ACCOUNT_DELAY_MS", 1000);
 export const authAccountLimiter = slowDown({
   windowMs: getEnvNumber("RATE_LIMIT_AUTH_ACCOUNT_WINDOW_MS", 15 * 60 * 1000),
   delayAfter: authDelayAfter,
-  delayMs: (hits: number, req: Request) => {
+  delayMs: (hits: number, _req: Request) => {
     // delayAfter defaults to 3. 
     // If hits is 4, delay is authBaseDelayMs * 2^0
     // If hits is 5, delay is authBaseDelayMs * 2^1, etc.

@@ -1,9 +1,9 @@
-import { SimulationState, ChatMessage } from "./types";
+import { SimulationState, ChatMessage, Announcement } from "./types";
 
 const API_BASE = "/api";
 
 export const api = {
-  fetchState: async (): Promise<{ state: SimulationState, activeAnnouncements: any[], currentPhase: string }> => {
+  fetchState: async (): Promise<{ state: SimulationState, activeAnnouncements: Announcement[], currentPhase: string }> => {
     const res = await fetch(`${API_BASE}/state`);
     if (!res.ok) throw new Error("Failed to fetch state");
     return res.json();
@@ -107,7 +107,7 @@ export const api = {
     return res.json();
   },
 
-  publishBroadcast: async (announcement: any) => {
+  publishBroadcast: async (announcement: Announcement) => {
     const res = await fetch(`${API_BASE}/broadcast/publish`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

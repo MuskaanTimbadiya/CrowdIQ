@@ -6,7 +6,7 @@ export const validateRequest = (schema: ZodSchema) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       await schema.parseAsync(req.body);
-      next();
+      return next();
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({

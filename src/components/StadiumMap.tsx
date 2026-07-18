@@ -116,6 +116,7 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
 
   useEffect(() => {
     if (!mountRef.current || !canvasRef.current) return;
+    const currentCanvas = canvasRef.current;
 
     const width = mountRef.current.clientWidth;
     const height = mountRef.current.clientHeight || 380;
@@ -739,8 +740,8 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
       incidentGroupsMap.clear();
 
       incidents.filter(inc => !inc.resolved).forEach((inc) => {
-        let px = 0;
-        let pz = 0;
+        let px: number;
+        let pz: number;
 
         if (inc.id === "inc_1") {
           px = 0; pz = 25;
@@ -832,7 +833,7 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     let hoveredObject: THREE.Object3D | null = null;
-    let originalHoverColor = new THREE.Color();
+    const originalHoverColor = new THREE.Color();
 
     const handlePointerDown = (e: MouseEvent) => {
       const rect = canvasRef.current!.getBoundingClientRect();
@@ -903,7 +904,7 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
         const isSelected = meshId === id;
         
         // Find main mesh to apply scaling/emissive changes
-        let targetMesh: THREE.Object3D | null = null;
+        let targetMesh: THREE.Object3D | null;
         if (obj instanceof THREE.Group) {
           targetMesh = obj.children[0]; // first child (core or cone)
         } else {
@@ -1183,9 +1184,9 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", handleResize);
-      if (canvasRef.current) {
-        canvasRef.current.removeEventListener("pointerdown", handlePointerDown);
-        canvasRef.current.removeEventListener("pointermove", handlePointerMove);
+      if (currentCanvas) {
+        currentCanvas.removeEventListener("pointerdown", handlePointerDown);
+        currentCanvas.removeEventListener("pointermove", handlePointerMove);
       }
       controls.dispose();
       renderer.dispose();

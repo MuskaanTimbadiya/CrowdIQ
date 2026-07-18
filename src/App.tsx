@@ -79,10 +79,9 @@ export default function App() {
   const [currentMessage, setCurrentMessage] = useState<string>("");
   const [userLanguage, setUserLanguage] = useState<string>("English");
   const [loadingGuidance, setLoadingGuidance] = useState<boolean>(false);
-  const [localTime, setLocalTime] = useState<string>("");
+  const [localTime, setLocalTime] = useState<string>(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
 
   useEffect(() => {
-    setLocalTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     const interval = setInterval(() => {
       setLocalTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     }, 1000);
@@ -116,20 +115,6 @@ export default function App() {
   // Chat scroll anchor
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Initial load
-  useEffect(() => {
-    fetchState();
-  }, []);
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatHistory]);
-
-  const addLog = (message: string) => {
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    setOperationLogs(prev => [`[${time}] ${message}`, ...prev.slice(0, 15)]);
-  };
-
   const fetchState = async () => {
     try {
       const res = await fetch("/api/state");
@@ -144,6 +129,24 @@ export default function App() {
       console.error("Failed to fetch state:", e);
     }
   };
+
+  useEffect(() => {
+    const init = async () => {
+      await fetchState();
+    };
+    init();
+  }, []);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatHistory]);
+
+  const addLog = (message: string) => {
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setOperationLogs(prev => [`[${time}] ${message}`, ...prev.slice(0, 15)]);
+  };
+
+
 
   const handlePhaseChange = async (phase: "ingress" | "halftime" | "egress", stadiumId?: string) => {
     try {
@@ -702,12 +705,7 @@ export default function App() {
     }
   };
 
-  const _scrollToId = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  };
+
 
   const renderAICore = () => {
     return (
