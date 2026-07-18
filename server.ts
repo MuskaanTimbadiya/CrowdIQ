@@ -378,7 +378,7 @@ const defaultWashrooms = (): Washroom[] => {
 };
 
 // State Object
-let state: SimulationState = {
+const state: SimulationState = {
   stadium: stadiums.metlife,
   gates: defaultGates("metlife"),
   transit: defaultTransit("metlife"),
@@ -450,9 +450,9 @@ const updateWaitTimesAndQueues = () => {
     }
 
     // Calculate avgWaitTime = queueCount / throughputRate
-    let wait = calcThroughput > 0 ? Math.round((gate.queueCount / calcThroughput) * waitMultiplier) : 99;
+    const wait = calcThroughput > 0 ? Math.round((gate.queueCount / calcThroughput) * waitMultiplier) : 99;
     
-    let status = gate.status;
+    let status: "OPEN" | "CONGESTED" | "CRITICAL" | "CLOSED";
     if (state.evacuationModeActive) {
       status = "OPEN";
     } else {
@@ -490,7 +490,7 @@ const updateWaitTimesAndQueues = () => {
     else if (road.congestion === "LOW") delay = 0;
 
     // Adjust speed based on weather and congestion
-    let baseSpeed = road.id === "road_bypass_ave" ? 45 : road.id === "road_stadium_blvd" ? 30 : 40;
+    const baseSpeed = road.id === "road_bypass_ave" ? 45 : road.id === "road_stadium_blvd" ? 30 : 40;
     let speed = Math.round(baseSpeed * speedMultiplier);
     if (road.congestion === "GRIDLOCK") speed = Math.round(speed * 0.15);
     else if (road.congestion === "HIGH") speed = Math.round(speed * 0.4);
@@ -518,7 +518,7 @@ const updateWaitTimesAndQueues = () => {
 };
 
 // Helper to clean markdown block formatting and parse JSON safely
-const parseGeminiJson = (rawText: string | undefined | null, fallback: any = {}) => {
+const parseGeminiJson = (rawText: string | undefined | null, fallback: unknown = {}) => {
   if (!rawText) return fallback;
   let cleanText = rawText.trim();
   if (cleanText.startsWith("```")) {
@@ -697,12 +697,12 @@ app.post("/api/incidents", validateRequest(createIncidentSchema), (req, res) => 
     return res.status(400).json({ error: "Invalid severity format" });
   }
 
-  const cleanLocation = (location || "Stadium Perimeter").replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
+  const cleanLocation = (location || "Stadium Perimeter").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/-/g, "").trim();
   const cleanDescription = (description || "No details provided.").replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
   
   let cleanSeverity: "INFO" | "WARNING" | "CRITICAL" = "INFO";
   if (severity && ["INFO", "WARNING", "CRITICAL"].includes(severity)) {
-    cleanSeverity = severity as any;
+    cleanSeverity = severity as "INFO" | "WARNING" | "CRITICAL";
   }
 
   const newIncident: CrowdIncident = {
@@ -863,7 +863,7 @@ app.post("/api/ai/optimize", validateRequest(aiOptimizeSchema), aiLimiter, async
 
     const parsed = parseGeminiJson(response.text, []);
     
-    const formatted = parsed.map((item: any, idx: number) => ({
+    const formatted = parsed.map((item: Record<string, unknown>, idx: number) => ({
       id: `opt_ai_${Date.now()}_${idx}`,
       title: item.title,
       description: item.description,
@@ -877,7 +877,7 @@ app.post("/api/ai/optimize", validateRequest(aiOptimizeSchema), aiLimiter, async
     // Keep the standard ones but prepend the fresh AI suggestions
     state.optimizations = [...formatted, ...state.optimizations];
     return res.json({ optimizations: state.optimizations });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Gemini Optimize Error:", error);
     // Graceful fallback when Gemini API fails
     const fallbackOptimizations = defaultOptimizations().map(o => ({
@@ -901,7 +901,7 @@ app.post("/api/ai/guidance", validateRequest(aiGuidanceSchema), aiLimiter, async
 
   const cleanMessage = message.replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
   let cleanLanguage = "English";
-  if (userLanguage && /^[a-zA-Z\s\-]{2,30}$/.test(userLanguage.trim())) {
+  if (userLanguage && /^[a-zA-Z\s-]{2,30}$/.test(userLanguage.trim())) {
     cleanLanguage = userLanguage.trim();
   }
 
@@ -920,7 +920,7 @@ app.post("/api/ai/guidance", validateRequest(aiGuidanceSchema), aiLimiter, async
 
   try {
     const formattedHistory = chatHistory
-      ? chatHistory.slice(-5).map((m: any) => `${m.sender.toUpperCase()}: ${m.text}`).join("\n")
+      ? chatHistory.slice(-5).map((m: { sender: string; text: string }) => `${m.sender.toUpperCase()}: ${m.text}`).join("\n")
       : "";
 
     const prompt = `
@@ -1011,7 +1011,7 @@ app.post("/api/ai/guidance", validateRequest(aiGuidanceSchema), aiLimiter, async
     };
 
     return res.json({ message: formattedReply });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Gemini Fan Guidance Error:", error);
     
     // Graceful fallback when Gemini API fails in live deployment (e.g. invalid key or network issue)
@@ -1119,7 +1119,7 @@ app.post("/api/ai/broadcast-draft", validateRequest(aiBroadcastDraftSchema), aiL
     };
 
     return res.json({ draft });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Gemini Broadcast Draft Error:", error);
     // Graceful fallback when Gemini API fails
     const draft: Announcement = {
@@ -1172,7 +1172,7 @@ app.post("/api/state/weather", validateRequest(weatherSchema), (req, res) => {
   if (!["SUNNY", "RAINY", "LIGHTNING_STORM"].includes(weather)) {
     return res.status(400).json({ error: "Invalid weather condition" });
   }
-  state.weather = weather as any;
+  state.weather = weather as "SUNNY" | "RAINY" | "LIGHTNING_STORM";
   updateWaitTimesAndQueues();
   return res.json(state);
 });
