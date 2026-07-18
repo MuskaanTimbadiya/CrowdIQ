@@ -1,9 +1,9 @@
 import app from "./server";
-import { CrowdIncident, OptimizationAction, GateStatus, Announcement } from "./src/types";
+import { SimulationState, CrowdIncident, OptimizationAction, GateStatus, Announcement } from "./src/types";
 
 const PORT = 3001;
 
-async function assertResponse<T = any>(url: string, options: RequestInit, assertion: (data: T, status: number) => void) {
+async function assertResponse<T>(url: string, options: RequestInit, assertion: (data: T, status: number) => void) {
   const res = await fetch(url, options);
   const data = await res.json() as T;
   assertion(data, res.status);
@@ -17,7 +17,7 @@ async function runTests() {
     
     try {
       // Test 1: GET /api/state
-      await assertResponse(`http://localhost:${PORT}/api/state`, {}, (data, status) => {
+      await assertResponse(`http://localhost:${PORT}/api/state`, {}, (data: { state: SimulationState, activeAnnouncements: Announcement[], currentPhase: string }, status) => {
         if (status !== 200) throw new Error(`GET /api/state returned ${status}`);
         if (!data.state || !data.activeAnnouncements || !data.currentPhase) {
           throw new Error("GET /api/state response format invalid");
@@ -36,7 +36,7 @@ async function runTests() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phase: "halftime", stadiumId: "sofi" })
-      }, (data, status) => {
+      }, (data: { state: SimulationState, activeAnnouncements: Announcement[], currentPhase: string }, status) => {
         if (status !== 200) throw new Error(`POST /api/state/phase returned ${status}`);
         if (data.currentPhase !== "halftime" || data.state.stadium.id !== "sofi") {
           throw new Error("POST /api/state/phase failed to transition state");
@@ -53,7 +53,7 @@ async function runTests() {
           severity: "CRITICAL",
           description: "Escalator mechanical failure causing foot congestion"
         })
-      }, (data, status) => {
+      }, (data: SimulationState, status) => {
         if (status !== 200) throw new Error(`POST /api/incidents returned ${status}`);
         const newestIncident = data.incidents[0];
         if (newestIncident.location !== "Gate A Ingress" || newestIncident.severity !== "CRITICAL") {
@@ -71,7 +71,7 @@ async function runTests() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: incidentToResolve.id })
-      }, (data, status) => {
+      }, (data: SimulationState, status) => {
         if (status !== 200) throw new Error(`POST /api/incidents/resolve returned ${status}`);
         const resolvedInc = data.incidents.find((i: CrowdIncident) => i.id === incidentToResolve.id);
         if (!resolvedInc || !resolvedInc.resolved) {
@@ -86,7 +86,7 @@ async function runTests() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: testOpt.id })
-      }, (data, status) => {
+      }, (data: SimulationState, status) => {
         if (status !== 200) throw new Error(`POST /api/optimizations/apply returned ${status}`);
         const appliedOpt = data.optimizations.find((o: OptimizationAction) => o.id === testOpt.id);
         if (!appliedOpt || !appliedOpt.applied) {
@@ -98,7 +98,7 @@ async function runTests() {
       // Test 6: POST /api/ai/optimize
       await assertResponse(`http://localhost:${PORT}/api/ai/optimize`, {
         method: "POST"
-      }, (data, status) => {
+      }, (data: SimulationState, status) => {
         if (status !== 200) throw new Error(`POST /api/ai/optimize returned ${status}`);
         if (!data.optimizations || data.optimizations.length === 0) {
           throw new Error("POST /api/ai/optimize failed to return optimizations");
@@ -115,9 +115,9 @@ async function runTests() {
           chatHistory: [],
           userLanguage: "English"
         })
-      }, (data, status) => {
+      }, (data: { message: string | { text: string } }, status) => {
         if (status !== 200) throw new Error(`POST /api/ai/guidance returned ${status}`);
-        if (!data.message || !data.message.text) {
+        if (!data.message) {
           throw new Error("POST /api/ai/guidance returned invalid message content");
         }
         console.log("✅ Test 7 Passed: POST /api/ai/guidance assistant responded successfully.");
@@ -132,7 +132,7 @@ async function runTests() {
           incidentDescription: "pedestrian backup",
           urgency: "HIGH"
         })
-      }, (data, status) => {
+      }, (data: { draft: Announcement }, status) => {
         if (status !== 200) throw new Error(`POST /api/ai/broadcast-draft returned ${status}`);
         if (!data.draft || !data.draft.title) {
           throw new Error("POST /api/ai/broadcast-draft failed to create draft");
@@ -145,7 +145,7 @@ async function runTests() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ weather: "RAINY" })
-      }, (data, status) => {
+      }, (data: SimulationState, status) => {
         if (status !== 200) throw new Error(`POST /api/state/weather returned ${status}`);
         if (data.weather !== "RAINY") {
           throw new Error("POST /api/state/weather failed to update weather state");
@@ -158,7 +158,7 @@ async function runTests() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ active: true })
-      }, (data, status) => {
+      }, (data: SimulationState, status) => {
         if (status !== 200) throw new Error(`POST /api/state/evacuation returned ${status}`);
         if (data.evacuationModeActive !== true) {
           throw new Error("POST /api/state/evacuation failed to engage evacuation mode");
@@ -171,7 +171,7 @@ async function runTests() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ gateId: "gate_a", change: 2 })
-      }, (data, status) => {
+      }, (data: SimulationState, status) => {
         if (status !== 200) throw new Error(`POST /api/staff/redeploy returned ${status}`);
         const gate = data.gates.find((g: GateStatus) => g.id === "gate_a");
         if (!gate || gate.assignedVolunteers < 2) {
@@ -196,7 +196,7 @@ async function runTests() {
             timestamp: new Date().toISOString()
           }
         })
-      }, (data, status) => {
+      }, (data: { state: SimulationState, activeAnnouncements: Announcement[], currentPhase: string }, status) => {
         if (status !== 200) throw new Error(`POST /api/broadcast/publish returned ${status}`);
         const activeAnnouncements = data.activeAnnouncements;
         if (!activeAnnouncements || activeAnnouncements.length === 0 || activeAnnouncements[0].content !== "Attention: Evacuation drill in progress.") {
@@ -213,7 +213,7 @@ async function runTests() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: annId })
-      }, (data, status) => {
+      }, (data: { state: SimulationState, activeAnnouncements: Announcement[], currentPhase: string }, status) => {
          if (status !== 200) throw new Error(`POST /api/broadcast/clear returned ${status}`);
          const clearedAnn = data.activeAnnouncements.find((a: Announcement) => a.id === annId);
          if (clearedAnn && clearedAnn.broadcastActive === true) {
