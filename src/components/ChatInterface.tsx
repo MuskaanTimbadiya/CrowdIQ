@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import { ChatMessage } from "../types";
 
 interface ChatInterfaceProps {
@@ -21,8 +21,6 @@ export function ChatInterface({
   loadingGuidance,
   showAssistant,
   setShowAssistant,
-  selectAssetOnMap,
-  setActiveTab
 }: ChatInterfaceProps) {
   const [currentMessage, setCurrentMessage] = useState<string>("");
   const chatEndRef = useRef<HTMLDivElement>(null);

@@ -1,11 +1,6 @@
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import {
   SimulationState,
-  GateStatus,
-  TransitHub,
-  RoadStatus,
-  CrowdIncident,
-  OptimizationAction,
   ChatMessage,
   Announcement
 } from "./types";
@@ -62,12 +57,12 @@ export default function App() {
 
   // Interaction / Selection states
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
-  const [selectedAssetName, setSelectedAssetName] = useState<string>("");
-  const [selectedAssetType, setSelectedAssetType] = useState<'gate' | 'transit' | 'road' | 'incident' | ''>("");
+  const [_selectedAssetName, setSelectedAssetName] = useState<string>("");
+  const [_selectedAssetType, setSelectedAssetType] = useState<'gate' | 'transit' | 'road' | 'incident' | ''>("");
   const [selectedFoodStallRoute, setSelectedFoodStallRoute] = useState<{ gateId: string; stallId: string } | null>(null);
   const [selectedWashroomRoute, setSelectedWashroomRoute] = useState<{ gateId: string; washroomId: string } | null>(null);
   const [selectedTransitRoute, setSelectedTransitRoute] = useState<{ startId: string; endId: string } | null>(null);
-  const [selectedAssetDetails, setSelectedAssetDetails] = useState<string>("");
+  const [_selectedAssetDetails, setSelectedAssetDetails] = useState<string>("");
 
   // Assistant states
   const [showAssistant, setShowAssistant] = useState<boolean>(true);
@@ -707,7 +702,7 @@ export default function App() {
     }
   };
 
-  const scrollToId = (id: string) => {
+  const _scrollToId = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });

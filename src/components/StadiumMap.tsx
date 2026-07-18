@@ -26,9 +26,7 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
   selectedAssetId,
   onSelectAsset,
   evacuationModeActive = false,
-  foodStalls = [],
   selectedFoodStallRoute = null,
-  washrooms = [],
   selectedWashroomRoute = null,
   selectedTransitRoute = null
 }) => {
@@ -964,9 +962,9 @@ export const StadiumMap: React.FC<StadiumMapProps> = ({
 
         // Velocity coefficients based on road congestion
         let speedMult = 0.08;
-        if (road.congestion === "GRIDLOCK" || road.congestion === "HEAVY") speedMult = 0.006;
+        if (road.congestion === "GRIDLOCK") speedMult = 0.006;
         else if (road.congestion === "HIGH") speedMult = 0.02;
-        else if (road.congestion === "MEDIUM" || road.congestion === "MODERATE") speedMult = 0.05;
+        else if (road.congestion === "MEDIUM") speedMult = 0.05;
 
         particles.forEach((p) => {
           p.progress = (p.progress + delta * speedMult) % 1.0;

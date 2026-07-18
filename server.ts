@@ -29,8 +29,7 @@ import {
   CrowdIncident,
   OptimizationAction,
   Announcement,
-  WeatherCondition,
-  FoodStall,
+    FoodStall,
   Washroom
 } from "./src/types.js";
 
@@ -44,7 +43,7 @@ app.use(express.json());
 
 // Support Vercel serverless function routing where the '/api' prefix might be stripped.
 // Prepend '/api' to incoming request paths if they lack it, to ensure route matching.
-app.use((req, res, next) => {
+app.use((req, _res, next) => {
   if (!req.url.startsWith('/api') && !req.url.startsWith('/@') && !req.url.includes('.') && req.url !== '/') {
     req.url = '/api' + req.url;
   }
@@ -160,7 +159,7 @@ const defaultGates = (stadiumId: string): GateStatus[] => {
   ];
 };
 
-const defaultTransit = (stadiumId: string): TransitHub[] => {
+const defaultTransit = (_stadiumId: string): TransitHub[] => {
   return [
     {
       id: "rail_transit",
@@ -209,7 +208,7 @@ const defaultTransit = (stadiumId: string): TransitHub[] => {
   ];
 };
 
-const defaultRoads = (stadiumId: string): RoadStatus[] => {
+const defaultRoads = (_stadiumId: string): RoadStatus[] => {
   return [
     {
       id: "road_highway_n",
@@ -536,8 +535,8 @@ const parseGeminiJson = (rawText: string | undefined | null, fallback: any = {})
 // API Endpoints
 
 // 1. Get Simulation State
-app.get("/api/state", publicLimiter, (req, res) => {
-  res.json({
+app.get("/api/state", publicLimiter, (_req, res) => {
+  return res.json({
     state,
     activeAnnouncements,
     currentPhase
@@ -645,7 +644,7 @@ app.post("/api/state/phase", validateRequest(phaseSchema), (req, res) => {
   // Generate customized AI optimizations
   state.optimizations = defaultOptimizations();
   updateWaitTimesAndQueues();
-  res.json({
+  return res.json({
     state,
     activeAnnouncements,
     currentPhase
@@ -681,7 +680,7 @@ app.post("/api/incidents/resolve", validateRequest(resolveIncidentSchema), (req,
   }
 
   updateWaitTimesAndQueues();
-  res.json(state);
+  return res.json(state);
 });
 
 // 4. Create manual incident
@@ -715,7 +714,7 @@ app.post("/api/incidents", validateRequest(createIncidentSchema), (req, res) => 
     resolved: false
   };
   state.incidents.unshift(newIncident);
-  res.json(state);
+  return res.json(state);
 });
 
 // 5. Apply an optimization action
@@ -774,11 +773,11 @@ app.post("/api/optimizations/apply", validateRequest(applyOptimizationSchema), (
   }
 
   updateWaitTimesAndQueues();
-  res.json(state);
+  return res.json(state);
 });
 
 // 6. Gemini-powered dynamic overall analysis and generation of custom operational adjustments
-app.post("/api/ai/optimize", validateRequest(aiOptimizeSchema), async (req, res) => {
+app.post("/api/ai/optimize", validateRequest(aiOptimizeSchema), async (_req, res) => {
   if (!ai) {
     // Return standard mock optimization list as fallback
     const mockOptimizations: OptimizationAction[] = [
@@ -877,7 +876,7 @@ app.post("/api/ai/optimize", validateRequest(aiOptimizeSchema), async (req, res)
 
     // Keep the standard ones but prepend the fresh AI suggestions
     state.optimizations = [...formatted, ...state.optimizations];
-    res.json({ optimizations: state.optimizations });
+    return res.json({ optimizations: state.optimizations });
   } catch (error: any) {
     console.error("Gemini Optimize Error:", error);
     // Graceful fallback when Gemini API fails
@@ -885,7 +884,7 @@ app.post("/api/ai/optimize", validateRequest(aiOptimizeSchema), async (req, res)
       ...o,
       description: `[Offline Fallback] ${o.description}`
     }));
-    res.json({ optimizations: fallbackOptimizations });
+    return res.json({ optimizations: fallbackOptimizations });
   }
 });
 
@@ -1011,7 +1010,7 @@ app.post("/api/ai/guidance", validateRequest(aiGuidanceSchema), async (req, res)
       suggestedRoute: parsed.suggestedRoute || undefined
     };
 
-    res.json({ message: formattedReply });
+    return res.json({ message: formattedReply });
   } catch (error: any) {
     console.error("Gemini Fan Guidance Error:", error);
     
@@ -1030,7 +1029,7 @@ app.post("/api/ai/guidance", validateRequest(aiGuidanceSchema), async (req, res)
         congestedAreas: ["Gate C Plaza"]
       }
     };
-    res.json({ message: fallbackMessage });
+    return res.json({ message: fallbackMessage });
   }
 });
 
@@ -1119,7 +1118,7 @@ app.post("/api/ai/broadcast-draft", validateRequest(aiBroadcastDraftSchema), asy
       timestamp: new Date().toISOString()
     };
 
-    res.json({ draft });
+    return res.json({ draft });
   } catch (error: any) {
     console.error("Gemini Broadcast Draft Error:", error);
     // Graceful fallback when Gemini API fails
@@ -1133,7 +1132,7 @@ app.post("/api/ai/broadcast-draft", validateRequest(aiBroadcastDraftSchema), asy
       broadcastActive: false,
       timestamp: new Date().toISOString()
     };
-    res.json({ draft });
+    return res.json({ draft });
   }
 });
 
@@ -1148,9 +1147,9 @@ app.post("/api/broadcast/publish", validateRequest(publishBroadcastSchema), (req
       timestamp: new Date().toISOString()
     };
     activeAnnouncements.unshift(published);
-    res.json({ success: true, activeAnnouncements });
+    return res.json({ success: true, activeAnnouncements });
   } else {
-    res.status(400).json({ error: "No announcement data provided" });
+    return res.status(400).json({ error: "No announcement data provided" });
   }
 });
 
@@ -1163,7 +1162,7 @@ app.post("/api/broadcast/clear", validateRequest(clearBroadcastSchema), (req, re
     }
     return ann;
   });
-  res.json({ success: true, activeAnnouncements });
+  return res.json({ success: true, activeAnnouncements });
 });
 
 
@@ -1175,7 +1174,7 @@ app.post("/api/state/weather", validateRequest(weatherSchema), (req, res) => {
   }
   state.weather = weather as any;
   updateWaitTimesAndQueues();
-  res.json(state);
+  return res.json(state);
 });
 
 // 12. Toggle Evacuation drill mode
@@ -1206,7 +1205,7 @@ app.post("/api/state/evacuation", validateRequest(evacuationSchema), (req, res) 
     });
   }
   updateWaitTimesAndQueues();
-  res.json(state);
+  return res.json(state);
 });
 
 // 13. Redeploy volunteer staff to gates
@@ -1244,7 +1243,7 @@ app.post("/api/staff/redeploy", validateRequest(redeployStaffSchema), (req, res)
   });
 
   updateWaitTimesAndQueues();
-  res.json(state);
+  return res.json(state);
 });
 
 
